@@ -4,8 +4,35 @@ node_modules/
 
 # Build artifacts
 dist/
+build/
+target/
 
 # Temporary files
-node_modules/.tmp/
-node_modules/.vite/
+*.tmp
+*.temp
+
+# Environment files
+.env
+.env.local
+.env.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Vite specific
+.vite/
+
+# TypeScript build info
+*.tsbuildinfo
 ```
