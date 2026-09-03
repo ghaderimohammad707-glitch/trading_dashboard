@@ -1,68 +1,76 @@
 ```gitignore
 # Dependencies
 node_modules/
-.pnp/
-.pnp.js
+.pnpm-store/
+.npm/
+.yarn/
+.yarn-cache/
 
-# Testing
-coverage/
-.nyc_output/
-.coverage/
-
-# Production builds
-.next/
-out/
+# Build outputs
 dist/
 build/
+coverage/
+.nyc_output/
+.eslintcache
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# IDE
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
+*~
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-
-# TypeScript
-*.tsbuildinfo
-```
-
-Wait, I need to reconsider. The only modified file is 'src/components/market/PortfolioTab.tsx', which is a source code file. Let me check if there are any build artifacts or dependency-related files in the changes... There are no added/deleted files shown that would indicate build artifacts or dependencies.
-
-Actually, looking at the modified file being just a TypeScript React component file and no build artifacts in the changes, I should not add extensive ignore rules. The original .gitignore appears to be from a JavaScript/TypeScript project, but since there are no actual build artifacts or dependency files being changed, I'll keep it minimal.
-
-```gitignore
-# Dependencies
-node_modules/
-
-# Environment variables
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
 .env
-.env.local
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+pyvenv.cfg
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
 *.log
+.gitattributes
+.next
+out/
+.nuxt
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+htmlcov/
+.cov/
+istanbul/
+.lcov/
+.nyc_output/
+coverage-final.json
+.reports/
+tmp/
+temp/
 ```
