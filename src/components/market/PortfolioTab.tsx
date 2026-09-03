@@ -421,9 +421,8 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
           )}
 
           {/* View Tabs */}
-          <div className="w-full">
-            <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-            <TabsList className="grid grid-cols-3 w-full max-w-md">
+          <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
+            <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-4">
               <TabsTrigger value="overview" className="gap-1.5 text-xs">
                 <PieIcon className="size-3.5" /> نمای کلی
               </TabsTrigger>
@@ -435,21 +434,21 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
               </TabsTrigger>
             </TabsList>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <SummaryCard label="ارزش کل" value={`${(analysis.totalValue / 1e6).toFixed(1)}M ریال`} icon={<Briefcase className="size-4" />} />
-            <SummaryCard
-              label="سود/زیان"
-              value={`${analysis.totalPnl > 0 ? "+" : ""}${(analysis.totalPnl / 1e6).toFixed(1)}M`}
-              subValue={`${analysis.pnlPercent > 0 ? "+" : ""}${analysis.pnlPercent.toFixed(1)}٪`}
-              icon={analysis.totalPnl >= 0 ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
-              color={analysis.totalPnl >= 0 ? "text-up" : "text-down"}
-            />
-            <SummaryCard label="ریسک" value={analysis.riskLevel === "low" ? "کم" : analysis.riskLevel === "medium" ? "متوسط" : analysis.riskLevel === "high" ? "زیاد" : "بحرانی"}
-              icon={<Shield className="size-4" />}
-              color={analysis.riskLevel === "low" ? "text-up" : analysis.riskLevel === "medium" ? "text-amber-400" : "text-down"} />
-            <SummaryCard label="تنوع" value={`${analysis.diversificationScore}٪`} icon={<PieIcon className="size-4" />} color={analysis.diversificationScore > 60 ? "text-up" : "text-amber-400"} />
-          </div>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <SummaryCard label="ارزش کل" value={`${(analysis.totalValue / 1e6).toFixed(1)}M ریال`} icon={<Briefcase className="size-4" />} />
+              <SummaryCard
+                label="سود/زیان"
+                value={`${analysis.totalPnl > 0 ? "+" : ""}${(analysis.totalPnl / 1e6).toFixed(1)}M`}
+                subValue={`${analysis.pnlPercent > 0 ? "+" : ""}${analysis.pnlPercent.toFixed(1)}٪`}
+                icon={analysis.totalPnl >= 0 ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
+                color={analysis.totalPnl >= 0 ? "text-up" : "text-down"}
+              />
+              <SummaryCard label="ریسک" value={analysis.riskLevel === "low" ? "کم" : analysis.riskLevel === "medium" ? "متوسط" : analysis.riskLevel === "high" ? "زیاد" : "بحرانی"}
+                icon={<Shield className="size-4" />}
+                color={analysis.riskLevel === "low" ? "text-up" : analysis.riskLevel === "medium" ? "text-amber-400" : "text-down"} />
+              <SummaryCard label="تنوع" value={`${analysis.diversificationScore}٪`} icon={<PieIcon className="size-4" />} color={analysis.diversificationScore > 60 ? "text-up" : "text-amber-400"} />
+            </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
@@ -614,76 +613,75 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
               )}
             </div>
           </TabsContent>
+        </Tabs>
 
-          {/* Holdings Table */}
-          <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b bg-muted/20">
-              <h3 className="text-sm font-semibold">دارایی‌های پرتفوی</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-right text-xs text-muted-foreground">
-                    <th className="px-4 py-2 text-right">نماد</th>
-                    <th className="px-4 py-2 text-right">تعداد</th>
-                    <th className="px-4 py-2 text-right">میانگین</th>
-                    <th className="px-4 py-2 text-right">قیمت فعلی</th>
-                    <th className="px-4 py-2 text-right">ارزش</th>
-                    <th className="px-4 py-2 text-right">وزن</th>
-                    <th className="px-4 py-2 text-right">سود/زیان</th>
-                    <th className="px-4 py-2 text-right">سیگنال</th>
-                    <th className="px-4 py-2 text-right">ریسک</th>
-                    <th className="px-4 py-2 text-right"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analysis.holdings
-                    .sort((a, b) => b.value - a.value)
-                    .map((h) => (
-                    <tr key={h.symbol} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-2.5 font-semibold">{h.symbol}</td>
-                      <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{h.quantity.toLocaleString("fa-IR")}</td>
-                      <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{h.avgCost.toLocaleString("fa-IR")}</td>
-                      <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{h.currentPrice.toLocaleString("fa-IR")}</td>
-                      <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{(h.value / 1e6).toFixed(1)}M</td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-12 h-1.5 rounded-full bg-muted/40">
-                            <div className="h-full rounded-full bg-primary/60" style={{ width: `${Math.min(100, h.allocation)}%` }} />
-                          </div>
-                          <span className="text-[10px] tabular-nums-fa" dir="ltr">{h.allocation.toFixed(0)}٪</span>
+      {/* Holdings Table - Outside Tabs */}
+      </div>
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="px-4 py-2.5 border-b bg-muted/20">
+            <h3 className="text-sm font-semibold">دارایی‌های پرتفوی</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-right text-xs text-muted-foreground">
+                  <th className="px-4 py-2 text-right">نماد</th>
+                  <th className="px-4 py-2 text-right">تعداد</th>
+                  <th className="px-4 py-2 text-right">میانگین</th>
+                  <th className="px-4 py-2 text-right">قیمت فعلی</th>
+                  <th className="px-4 py-2 text-right">ارزش</th>
+                  <th className="px-4 py-2 text-right">وزن</th>
+                  <th className="px-4 py-2 text-right">سود/زیان</th>
+                  <th className="px-4 py-2 text-right">سیگنال</th>
+                  <th className="px-4 py-2 text-right">ریسک</th>
+                  <th className="px-4 py-2 text-right"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {analysis.holdings
+                  .sort((a, b) => b.value - a.value)
+                  .map((h) => (
+                  <tr key={h.symbol} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
+                    <td className="px-4 py-2.5 font-semibold">{h.symbol}</td>
+                    <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{h.quantity.toLocaleString("fa-IR")}</td>
+                    <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{h.avgCost.toLocaleString("fa-IR")}</td>
+                    <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{h.currentPrice.toLocaleString("fa-IR")}</td>
+                    <td className="px-4 py-2.5 tabular-nums-fa text-xs" dir="ltr">{(h.value / 1e6).toFixed(1)}M</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-12 h-1.5 rounded-full bg-muted/40">
+                          <div className="h-full rounded-full bg-primary/60" style={{ width: `${Math.min(100, h.allocation)}%` }} />
                         </div>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className={cn("tabular-nums-fa text-xs font-medium", h.pnl >= 0 ? "text-up" : "text-down")} dir="ltr">
-                          {h.pnl >= 0 ? "+" : ""}{(h.pnl / 1e6).toFixed(1)}M ({h.pnlPercent.toFixed(1)}٪)
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge variant={h.signal === "buy" ? "default" : h.signal === "sell" ? "destructive" : "secondary"} className="text-[9px]">
-                          {h.signal === "buy" ? "خرید" : h.signal === "sell" ? "فروش" : "نگهداری"}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className={cn(
-                          "text-[10px] font-semibold",
-                          h.riskScore > 70 ? "text-red-400" : h.riskScore > 50 ? "text-amber-400" : "text-emerald-400"
-                        )} dir="ltr">{h.riskScore}</span>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Button variant="ghost" size="sm" onClick={() => onRemove(h.symbol as any)} className="h-7 w-7 p-0 text-destructive">
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <span className="text-[10px] tabular-nums-fa" dir="ltr">{h.allocation.toFixed(0)}٪</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className={cn("tabular-nums-fa text-xs font-medium", h.pnl >= 0 ? "text-up" : "text-down")} dir="ltr">
+                        {h.pnl >= 0 ? "+" : ""}{(h.pnl / 1e6).toFixed(1)}M ({h.pnlPercent.toFixed(1)}٪)
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge variant={h.signal === "buy" ? "default" : h.signal === "sell" ? "destructive" : "secondary"} className="text-[9px]">
+                        {h.signal === "buy" ? "خرید" : h.signal === "sell" ? "فروش" : "نگهداری"}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className={cn(
+                        "text-[10px] font-semibold",
+                        h.riskScore > 70 ? "text-red-400" : h.riskScore > 50 ? "text-amber-400" : "text-emerald-400"
+                      )} dir="ltr">{h.riskScore}</span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Button variant="ghost" size="sm" onClick={() => onRemove(h.symbol as any)} className="h-7 w-7 p-0 text-destructive">
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-            </Tabs>
-          </div>
       </>
     </div>
   );
