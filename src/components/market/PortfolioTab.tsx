@@ -1,19 +1,26 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import {
   Briefcase, Loader2, Plus, Trash2, TrendingUp, TrendingDown,
   AlertTriangle, Shield, PieChart as PieIcon, Activity, BarChart3,
-  RefreshCw, Zap, Target, ArrowLeftRight,
+  RefreshCw, Zap, Target, ArrowLeftRight, Lightbulb, DollarSign,
+  Percent, Calendar, Info, CheckCircle, XCircle, Minus,
+  ArrowUpRight, ArrowDownRight, Sparkles, Brain,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Area, AreaChart,
-  BarChart, Bar, Legend,
+  BarChart, Bar, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
 } from "recharts";
 import { getCachedInstruments, getCachedCodal } from "@/lib/clientFetch";
 import { generateAllSignals, type CompositeSignal } from "@/lib/analysisEngines";
+import { optimizePortfolio, suggestRebalance } from "@/lib/portfolioOptimizer";
 
 // ─── Types ───
 interface PortfolioItem {
@@ -48,19 +55,41 @@ interface PortfolioAnalysis {
     signalStrength: number;
     riskScore: number;
     allocation: number;
+    confidence?: number;
+    technicalScore?: number;
+    fundamentalScore?: number;
   }[];
   riskMetrics: {
     var95: number;
     sharpeRatio: number;
     maxDrawdown: number;
     volatility: number;
+    sortino?: number;
+    calmar?: number;
   };
   rebalancingSuggestions: {
     symbol: string;
     action: "increase" | "decrease" | "hold";
     reason: string;
     targetAllocation: number;
+    priority: "high" | "medium" | "low";
   }[];
+  recommendations: {
+    id: string;
+    type: "buy" | "sell" | "hold" | "rebalance" | "risk" | "opportunity";
+    title: string;
+    description: string;
+    priority: "high" | "medium" | "low";
+    impact: "positive" | "negative" | "neutral";
+    symbols?: string[];
+  }[];
+  optimizationSuggestion?: {
+    expectedReturn: number;
+    expectedRisk: number;
+    sharpeRatio: number;
+    diversificationScore: number;
+    suggestedWeights: { symbol: string; weight: number }[];
+  };
 }
 
 const COLORS = ["#8b5cf6", "#22c55e", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#f97316", "#14b8a6"];
@@ -113,6 +142,9 @@ function analyzePortfolio(items: PortfolioItem[]): PortfolioAnalysis {
       signalStrength: sig?.strength ?? 50,
       riskScore,
       allocation: totalValue > 0 ? (value / totalValue) * 100 : 0,
+      confidence: sig?.confidence,
+      technicalScore: sig?.technical?.score,
+      fundamentalScore: sig?.fundamental?.score,
     };
   });
 
@@ -163,15 +195,18 @@ function analyzePortfolio(items: PortfolioItem[]): PortfolioAnalysis {
     };
   });
 
-  // Risk metrics
+  // Risk metrics (enhanced)
+  const volatility = Math.round(avgRisk * 0.8);
   const riskMetrics = {
     var95: Math.round(totalValue * 0.03 * (1 + avgRisk / 100)), // VaR 95%
-    sharpeRatio: totalCost > 0 ? (totalPnl / totalCost) / (avgRisk / 100) : 0,
+    sharpeRatio: totalCost > 0 ? (totalPnl / totalCost) / (volatility / 100) : 0,
     maxDrawdown: Math.round(Math.abs(totalPnl * 0.15 * (1 + avgRisk / 100))),
-    volatility: Math.round(avgRisk * 0.8),
+    volatility,
+    sortino: totalCost > 0 ? (totalPnl / totalCost) / ((volatility * 0.7) / 100) : 0,
+    calmar: totalCost > 0 ? (totalPnl / totalCost) / (Math.abs(totalPnl * 0.15) / totalCost) : 0,
   };
 
-  // Rebalancing suggestions
+  // Rebalancing suggestions (enhanced with priority)
   const rebalancingSuggestions = holdings
     .filter(h => {
       if (h.allocation > 30) return true; // Over-concentrated
@@ -188,7 +223,96 @@ function analyzePortfolio(items: PortfolioItem[]): PortfolioAnalysis {
               h.signal === "sell" ? "سیگنال فروش — کاهش وزن پیشنهادی" :
               "وزن کم — افزایش وزن پیشنهادی",
       targetAllocation: h.allocation > 30 ? 20 : h.allocation < 5 ? 10 : h.allocation,
+      priority: h.allocation > 30 || h.signal === "sell" ? "high" as const : "medium" as const,
     }));
+
+  // Generate intelligent recommendations
+  const recommendations: PortfolioAnalysis["recommendations"] = [];
+  
+  // Recommendation 1: Concentration risk
+  const topHolding = holdings.reduce((max, h) => h.allocation > max.allocation ? h : max, holdings[0]);
+  if (topHolding && topHolding.allocation > 25) {
+    recommendations.push({
+      id: "concentration-risk",
+      type: "risk",
+      title: "⚠️ ریسک تمرکز بالا",
+      description: `بیش از ${topHolding.allocation.toFixed(0)}٪ پرتفوی در نماد ${topHolding.symbol} متمرکز است. توصیه می‌شود تنوع را افزایش دهید.`,
+      priority: "high",
+      impact: "negative",
+      symbols: [topHolding.symbol],
+    });
+  }
+
+  // Recommendation 2: Strong buy signals
+  const strongBuys = holdings.filter(h => h.signal === "buy" && (h.confidence ?? 0) > 70);
+  if (strongBuys.length > 0) {
+    recommendations.push({
+      id: "strong-buy-opportunity",
+      type: "opportunity",
+      title: "💎 فرصت‌های خرید قوی",
+      description: `${strongBuys.length} نماد با سیگنال خرید قوی و اطمینان بالا شناسایی شده است.`,
+      priority: "high",
+      impact: "positive",
+      symbols: strongBuys.map(h => h.symbol),
+    });
+  }
+
+  // Recommendation 3: Sell warnings
+  const sellHoldings = holdings.filter(h => h.signal === "sell" && h.allocation > 5);
+  if (sellHoldings.length > 0) {
+    recommendations.push({
+      id: "sell-warning",
+      type: "sell",
+      title: "🔴 هشدار فروش",
+      description: `${sellHoldings.length} نماد دارای سیگنال فروش هستند و بهتر است وزن آن‌ها کاهش یابد.`,
+      priority: "high",
+      impact: "negative",
+      symbols: sellHoldings.map(h => h.symbol),
+    });
+  }
+
+  // Recommendation 4: Diversification improvement
+  if (diversificationScore < 50) {
+    recommendations.push({
+      id: "low-diversification",
+      type: "rebalance",
+      title: "📊 نیاز به تنوع‌بخشی",
+      description: `امتیاز تنوع پرتفوی (${diversificationScore}٪) پایین است. توصیه می‌شود از نمادهای بیشتری استفاده کنید.`,
+      priority: "medium",
+      impact: "neutral",
+    });
+  }
+
+  // Recommendation 5: Profit taking
+  const bigWinners = holdings.filter(h => h.pnlPercent > 30 && h.allocation > 10);
+  if (bigWinners.length > 0) {
+    recommendations.push({
+      id: "profit-taking",
+      type: "hold",
+      title: "💰 برداشت سود",
+      description: `برخی نمادها سود قابل توجهی (${bigWinners.map(h => `${h.symbol}: ${h.pnlPercent.toFixed(0)}٪`).join(", ")}) داشته‌اند.可以考虑 برداشت بخشی از سود.`,
+      priority: "medium",
+      impact: "positive",
+      symbols: bigWinners.map(h => h.symbol),
+    });
+  }
+
+  // Recommendation 6: Loss cutting
+  const bigLosers = holdings.filter(h => h.pnlPercent < -20 && h.riskScore > 60);
+  if (bigLosers.length > 0) {
+    recommendations.push({
+      id: "loss-cutting",
+      type: "sell",
+      title: "✂️ حد ضرر",
+      description: `برخی نمادها زیان قابل توجهی دارند و ریسک آن‌ها بالاست. بررسی خروج از این نمادها توصیه می‌شود.`,
+      priority: "high",
+      impact: "negative",
+      symbols: bigLosers.map(h => h.symbol),
+    });
+  }
+
+  // Optimization suggestion (placeholder - would call optimizePortfolio in real scenario)
+  const optimizationSuggestion = undefined; // Will be implemented with async call
 
   return {
     totalValue,
@@ -203,6 +327,8 @@ function analyzePortfolio(items: PortfolioItem[]): PortfolioAnalysis {
     holdings,
     riskMetrics,
     rebalancingSuggestions,
+    recommendations,
+    optimizationSuggestion,
   };
 }
 
@@ -255,24 +381,58 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
         </div>
       ) : (
         <>
+          {/* Intelligent Recommendations Alert */}
+          {analysis.recommendations.length > 0 && (
+            <Card className="border-l-4 border-l-violet-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Brain className="size-4 text-violet-500" />
+                  توصیه‌های هوشمند پرتفوی
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {analysis.recommendations.slice(0, 3).map(rec => (
+                  <Alert key={rec.id} className={cn(
+                    "text-xs py-2 px-3",
+                    rec.impact === "positive" ? "bg-emerald-500/5 border-emerald-500/20" :
+                    rec.impact === "negative" ? "bg-red-500/5 border-red-500/20" :
+                    "bg-blue-500/5 border-blue-500/20"
+                  )}>
+                    <AlertTitle className={cn(
+                      "font-semibold flex items-center gap-1",
+                      rec.priority === "high" ? "text-red-400" :
+                      rec.priority === "medium" ? "text-amber-400" : "text-blue-400"
+                    )}>
+                      {rec.priority === "high" ? "🔴" : rec.priority === "medium" ? "🟡" : "🔵"}
+                      {rec.title}
+                    </AlertTitle>
+                    <AlertDescription className="text-muted-foreground mt-1">
+                      {rec.description}
+                      {rec.symbols && rec.symbols.length > 0 && (
+                        <span className="block mt-1 text-xs">
+                          نمادها: <strong>{rec.symbols.join("، ")}</strong>
+                        </span>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {/* View Tabs */}
-          <div className="flex gap-1 border-b pb-2">
-            {[
-              { id: "overview", label: "نمای کلی", icon: <PieIcon className="size-3.5" /> },
-              { id: "risk", label: "تحلیل ریسک", icon: <Shield className="size-3.5" /> },
-              { id: "rebalance", label: "بازچینی", icon: <ArrowLeftRight className="size-3.5" /> },
-            ].map(v => (
-              <Button
-                key={v.id}
-                variant={activeView === v.id ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveView(v.id as any)}
-                className="gap-1.5 text-xs"
-              >
-                {v.icon} {v.label}
-              </Button>
-            ))}
-          </div>
+          <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
+            <TabsList className="grid grid-cols-3 w-full max-w-md">
+              <TabsTrigger value="overview" className="gap-1.5 text-xs">
+                <PieIcon className="size-3.5" /> نمای کلی
+              </TabsTrigger>
+              <TabsTrigger value="risk" className="gap-1.5 text-xs">
+                <Shield className="size-3.5" /> تحلیل ریسک
+              </TabsTrigger>
+              <TabsTrigger value="rebalance" className="gap-1.5 text-xs">
+                <ArrowLeftRight className="size-3.5" /> بازچینی
+              </TabsTrigger>
+            </TabsList>
 
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
