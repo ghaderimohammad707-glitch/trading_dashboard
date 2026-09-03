@@ -47,11 +47,18 @@ function generateOHLCV(
 ): CandleData[] {
   const data: CandleData[] = [];
   const now = new Date();
-  const currentClose = lastPrice || close;
-  const dailyReturn = (changePercent || 0) / 100;
-
+  
+  // Validate and sanitize inputs
+  const currentClose = (lastPrice && isFinite(lastPrice)) ? lastPrice : (close && isFinite(close)) ? close : 1000;
+  const validOpen = (open && isFinite(open)) ? open : currentClose;
+  const validHigh = (high && isFinite(high)) ? high : Math.max(currentClose, validOpen) * 1.02;
+  const validLow = (low && isFinite(low)) ? low : Math.min(currentClose, validOpen) * 0.98;
+  const validVolume = (volume && isFinite(volume)) ? volume : 1000000;
+  const validChangePercent = (changePercent && isFinite(changePercent)) ? changePercent : 0;
+  
+  const dailyReturn = validChangePercent / 100;
   let price = currentClose / (1 + dailyReturn * days * 0.01);
-  const volatility = Math.abs(currentClose - (open || currentClose)) / currentClose || 0.02;
+  const volatility = Math.abs(currentClose - validOpen) / currentClose || 0.02;
 
   for (let i = days; i >= 1; i--) {
     const date = new Date(now);
@@ -67,14 +74,25 @@ function generateOHLCV(
     const intraVol = Math.abs(c - o) * 0.5 + price * volatility * 0.3;
     const h = Math.max(o, c) + Math.random() * intraVol;
     const l = Math.min(o, c) - Math.random() * intraVol;
-    const v = Math.round(volume * (0.4 + Math.random() * 1.2));
+    const v = Math.round(validVolume * (0.4 + Math.random() * 1.2));
+
+    // Ensure all values are valid numbers
+    const openVal = Math.round(o * 100) / 100;
+    const highVal = Math.round(Math.max(h, openVal, c) * 100) / 100;
+    const lowVal = Math.round(Math.max(1, Math.min(l, openVal, c)) * 100) / 100;
+    const closeVal = Math.round(c * 100) / 100;
+    
+    // Skip if any value is NaN or infinite
+    if (!isFinite(openVal) || !isFinite(highVal) || !isFinite(lowVal) || !isFinite(closeVal)) {
+      continue;
+    }
 
     data.push({
       time: dateStr,
-      open: Math.round(o),
-      high: Math.round(h),
-      low: Math.max(1, Math.round(l)),
-      close: Math.round(c),
+      open: openVal,
+      high: highVal,
+      low: lowVal,
+      close: closeVal,
       volume: v,
     });
     price = c;
@@ -82,10 +100,15 @@ function generateOHLCV(
 
   if (data.length > 0) {
     const last = data[data.length - 1];
-    last.close = currentClose;
-    last.high = Math.max(last.high, currentClose, high || currentClose);
-    last.low = Math.min(last.low, currentClose, low || currentClose);
-    last.volume = volume;
+    last.close = Math.round(currentClose * 100) / 100;
+    last.high = Math.max(last.high, Math.round(currentClose * 100) / 100, Math.round(validHigh * 100) / 100);
+    last.low = Math.min(last.low, Math.round(currentClose * 100) / 100, Math.round(validLow * 100) / 100);
+    last.volume = validVolume;
+    
+    // Final validation
+    if (!isFinite(last.open) || !isFinite(last.high) || !isFinite(last.low) || !isFinite(last.close)) {
+      data.pop();
+    }
   }
 
   return data;
