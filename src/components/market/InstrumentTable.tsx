@@ -641,7 +641,7 @@ export function InstrumentTable({
               {headCells(segment)}
             </TableRow>
           </TableHeader>
-          <TableBody>                {displayInstruments.length === 0 ? (
+          <TableBody>{displayInstruments.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={colSpan(segment)}
