@@ -615,9 +615,8 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
           </TabsContent>
         </Tabs>
 
-      {/* Holdings Table - Outside Tabs */}
-      </div>
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        {/* Holdings Table - Inside Tabs container but outside Tab contents */}
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
           <div className="px-4 py-2.5 border-b bg-muted/20">
             <h3 className="text-sm font-semibold">دارایی‌های پرتفوی</h3>
           </div>
@@ -682,7 +681,8 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
             </table>
           </div>
         </div>
-      </>
+        </>
+      )}
     </div>
   );
 }
