@@ -451,7 +451,7 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
           </div>
 
           {/* Overview Tab */}
-          {activeView === "overview" && (
+          <TabsContent value="overview" className="space-y-4">
             <>
               {/* Charts Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -501,11 +501,10 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
                   </div>
                 </div>
               </div>
-            </>
-          )}
+            )}
 
           {/* Risk Tab */}
-          {activeView === "risk" && (
+          <TabsContent value="risk" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Risk Metrics */}
               <div className="rounded-xl border bg-card p-4">
@@ -583,7 +582,7 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
           )}
 
           {/* Rebalance Tab */}
-          {activeView === "rebalance" && (
+          <TabsContent value="rebalance" className="space-y-4">
             <div className="flex flex-col gap-4">
               {analysis.rebalancingSuggestions.length === 0 ? (
                 <div className="rounded-xl border bg-card py-10 text-center text-sm text-muted-foreground">
@@ -682,8 +681,8 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
               </table>
             </div>
           </div>
-        </>
-      )}
+        )}
+      </Tabs>
     </div>
   );
 }
