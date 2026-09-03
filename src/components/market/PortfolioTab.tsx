@@ -421,7 +421,8 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
           )}
 
           {/* View Tabs */}
-          <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
+          <div className="w-full">
+            <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
             <TabsList className="grid grid-cols-3 w-full max-w-md">
               <TabsTrigger value="overview" className="gap-1.5 text-xs">
                 <PieIcon className="size-3.5" /> نمای کلی
@@ -452,56 +453,55 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
-            <>
-              {/* Charts Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Equity Curve */}
-                <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5"><Activity className="size-4" /> منحنی سرمایه</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart data={analysis.dailyPnl}>
-                      <defs>
-                        <linearGradient id="pnlGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={analysis.totalPnl >= 0 ? "#22c55e" : "#ef4444"} stopOpacity={0.3} />
-                          <stop offset="100%" stopColor={analysis.totalPnl >= 0 ? "#22c55e" : "#ef4444"} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(75,85,99,0.15)" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="rgba(156,163,175,0.5)" />
-                      <YAxis tick={{ fontSize: 10 }} stroke="rgba(156,163,175,0.5)" />
-                      <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 11 }} />
-                      <Area type="monotone" dataKey="value" stroke={analysis.totalPnl >= 0 ? "#22c55e" : "#ef4444"} fill="url(#pnlGrad)" strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Equity Curve */}
+              <div className="rounded-xl border bg-card p-4">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5"><Activity className="size-4" /> منحنی سرمایه</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={analysis.dailyPnl}>
+                    <defs>
+                      <linearGradient id="pnlGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={analysis.totalPnl >= 0 ? "#22c55e" : "#ef4444"} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={analysis.totalPnl >= 0 ? "#22c55e" : "#ef4444"} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(75,85,99,0.15)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="rgba(156,163,175,0.5)" />
+                    <YAxis tick={{ fontSize: 10 }} stroke="rgba(156,163,175,0.5)" />
+                    <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 11 }} />
+                    <Area type="monotone" dataKey="value" stroke={analysis.totalPnl >= 0 ? "#22c55e" : "#ef4444"} fill="url(#pnlGrad)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
 
-                {/* Sector Pie */}
-                <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5"><PieIcon className="size-4" /> ترکیب پرتفوی</h3>
-                  <div className="flex items-center gap-4">
-                    <ResponsiveContainer width="50%" height={180}>
-                      <PieChart>
-                        <Pie data={analysis.sectorExposure} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
-                          {analysis.sectorExposure.map((entry, i) => (
-                            <Cell key={entry.name} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 11 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="flex flex-col gap-1.5">
-                      {analysis.sectorExposure.map((s) => (
-                        <div key={s.name} className="flex items-center gap-2 text-xs">
-                          <span className="size-2 rounded-full" style={{ background: s.color }} />
-                          <span className="text-muted-foreground">{s.name}</span>
-                          <span className="font-medium" dir="ltr">{s.value}٪</span>
-                        </div>
-                      ))}
-                    </div>
+              {/* Sector Pie */}
+              <div className="rounded-xl border bg-card p-4">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5"><PieIcon className="size-4" /> ترکیب پرتفوی</h3>
+                <div className="flex items-center gap-4">
+                  <ResponsiveContainer width="50%" height={180}>
+                    <PieChart>
+                      <Pie data={analysis.sectorExposure} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
+                        {analysis.sectorExposure.map((entry, i) => (
+                          <Cell key={entry.name} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex flex-col gap-1.5">
+                    {analysis.sectorExposure.map((s) => (
+                      <div key={s.name} className="flex items-center gap-2 text-xs">
+                        <span className="size-2 rounded-full" style={{ background: s.color }} />
+                        <span className="text-muted-foreground">{s.name}</span>
+                        <span className="font-medium" dir="ltr">{s.value}٪</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          </TabsContent>
 
           {/* Risk Tab */}
           <TabsContent value="risk" className="space-y-4">
@@ -579,7 +579,7 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
                 </div>
               </div>
             </div>
-          )}
+          </TabsContent>
 
           {/* Rebalance Tab */}
           <TabsContent value="rebalance" className="space-y-4">
@@ -613,7 +613,7 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
                 </div>
               )}
             </div>
-          )}
+          </TabsContent>
 
           {/* Holdings Table */}
           <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -681,8 +681,10 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
               </table>
             </div>
           </div>
-        )}
-      </Tabs>
+        </div>
+            </Tabs>
+          </div>
+      </>
     </div>
   );
 }
