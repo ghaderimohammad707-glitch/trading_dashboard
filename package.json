@@ -47,6 +47,7 @@
     "@tanstack/react-virtual": "^3.14.10",
     "@vly-ai/integrations": "^0.6.13",
     "@zumer/snapdom": "^2.24.15",
+    "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
