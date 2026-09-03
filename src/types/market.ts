@@ -1,5 +1,5 @@
 /**
- * انواع داده‌های بازار برای سرویس TSETMC
+ * انواع داده‌های بازار برای سرویس TSETMC و Codal
  */
 
 /**
@@ -24,6 +24,14 @@ export interface OrderBookLevel {
 }
 
 /**
+ * اطلاعات حقیقی و حقوقی
+ */
+export interface InvestorTypeData {
+  individual: number; // درصد یا حجم حقیقی
+  institutional: number; // درصد یا حجم حقوقی
+}
+
+/**
  * داده‌های تابلوخوانی (Market Watch)
  */
 export interface MarketWatchData {
@@ -42,19 +50,72 @@ export interface MarketWatchData {
   yesterdayPrice: number; // قیمت پایانی دیروز
   state: 'Open' | 'Closed' | 'Unknown'; // وضعیت نماد
   timestamp: number;
+  openPrice?: number;
+  highPrice?: number;
+  lowPrice?: number;
+  buyerCount?: number;
+  sellerCount?: number;
+  investorTypeBuy?: InvestorTypeData;
+  investorTypeSell?: InvestorTypeData;
 }
 
 /**
- * اطلاعات حقیقی و حقوقی
+ * صورت‌های مالی (Financial Statements)
  */
-export interface InvestorTypeData {
-  buyVolume: number;
-  sellVolume: number;
-  buyCount: number;
-  sellCount: number;
-  netBuyVolume: number;
-  avgBuyPrice: number;
-  avgSellPrice: number;
+export interface FinancialStatement {
+  symbol: string;
+  reportDate: Date;
+  fiscalYear: number;
+  period: string; // سالانه، میان‌دوره‌ای
+  revenue: number;
+  netProfit: number;
+  grossProfit: number;
+  operatingProfit: number;
+  eps: number;
+  pe: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  shareholdersEquity: number;
+  currentAssets: number;
+  currentLiabilities: number;
+  cashFlow: number;
+  debtToEquity: number;
+  roe: number;
+  roa: number;
+  currency: string;
+}
+
+/**
+ * گزارش ماهانه
+ */
+export interface MonthlyReport {
+  symbol: string;
+  month: string;
+  year: number;
+  reportDate: Date;
+  revenue: number;
+  productionVolume: number;
+  salesVolume: number;
+  productPrice: number;
+  capacityUtilization: number;
+  YoYRevenueGrowth: number;
+  MoMRevenueGrowth: number;
+  currency: string;
+}
+
+/**
+ * اطلاعات سود تقسیمی
+ */
+export interface DividendInfo {
+  symbol: string;
+  fiscalYear: number;
+  dpsProposed: number;
+  dpsApproved: number;
+  paymentDate: Date | null;
+  exDividendDate: Date | null;
+  dividendYield: number;
+  payoutRatio: number;
+  currency: string;
 }
 
 /**
