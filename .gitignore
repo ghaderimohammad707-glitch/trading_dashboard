@@ -1,27 +1,48 @@
 ```gitignore
 # Dependencies
 node_modules/
-.pnpm-store/
-.npm/
-.yarn/
-.bazel/
+.pnp/
+.pnp.js
 
-# Build outputs
+# Testing
+coverage/
+.nyc_output/
+coverage-final.json
+
+# Builds
+.next/
+.nuxt/
 dist/
 build/
-coverage/
 out/
-.bundle/
+.output/
+.svelte-kit/
+
+# Environment
+.env
+.env.local
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
 .Python
-env/
-venv/
-.venv/
 pip-log.txt
 pip-delete-this-directory.txt
 .tox/
@@ -32,69 +53,238 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
-*.pot
-*.pyc
-*.pyo
-.pytest_cache/
-.mypy_cache/
-.hypothesis/
+.git/modules/
+*.bin
+*.zip
+*.tar.gz
+*.rar
+.venv/
+env/
+venv/
+ENV/
+.venv.bak/
+venv.bak/
+.python-version
 
-# Node.js
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-node_modules/
-jspm_packages/
-web_modules/
+# TypeScript
 *.tsbuildinfo
-.next/
-.nuxt/
-.vuepress/dist
-.static
-.nuxt
-.output
+*.js.map
+*.ts.map
+*.tsx.map
+*.jsx.map
 
-# IDE
-.vscode/
-.idea/
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Browser extensions
+*.crx
+*.xpi
+*.nex
+
+# Compressed archives
+*.zip
+*.tar
+*.gz
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+
+# System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.apdisk
+
+# Sensitive files
+config/secrets.yml
+secrets.yaml
+*.key
+*.pem
+*.p12
+*.jks
+
+# IDE specific
+.vs/
 *.swp
 *.swo
 *~
 .DS_Store
 Thumbs.db
 
-# Environment
-.env
-.env.local
-.env.*
-!.env.example
+# Bower
+bower_components/
 
-# Logs
-logs/
-*.log
+# Grunt
+.grunt
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-Icon?
+# JSHint
+.jshintrc
+
+# CoffeeScript
+coffee/
+*.coffee.md
+
+# Ember
+tmp/
+temp/
+
+# Sass
+.sass-cache/
+
+# Rails
+*.rbc
+.rake_tasks
+public/system/
+vendor/bundle/
+.bundle/
+.rbx/
+
+# Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+.grunt/
+
+# Bower dependency directory (https://bower.io/)
+bower_components/
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript cache files
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# next.js build output
+.next/
+out/
+
+# nuxt.js build output
+.nuxt/
+dist/
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file for the editor
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# DVC
+.dvc/
+
+# mlflow
+.mlflow/
+
+# Temporary files created by PyCharm
+*.iml
+*.iws
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.coverage
+htmlcov/
+.pytest_cache/
+.hypothesis/
+.eggs/
+.venv/
+venv/
+env/
+
+# IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# WebStorm
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+# End:
+
 ```
-
-Wait, I need to reconsider this. Looking at the input again:
-
-### Added files:
-[]
-
-### Deleted files:
-[]
-
-### Modified files:
-['src/components/market/PortfolioTab.tsx']
-
-The modified file is a TypeScript React component (.tsx), which is source code. There are no build artifacts, dependency directories, or temporary files in the change list. According to rule 6, if the change list contains only source files and no build artifacts, dependencies, or temp files, I should output an empty .gitignore.
-
-(empty — output nothing)

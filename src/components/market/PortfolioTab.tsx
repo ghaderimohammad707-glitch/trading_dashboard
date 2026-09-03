@@ -681,9 +681,8 @@ export function PortfolioTab({ portfolio, onAdd, onRemove }: PortfolioTabProps) 
             </table>
           </div>
         </div>
-        </>
-      )}
-    </div>
+      </>
+    )}
   );
 }
 
