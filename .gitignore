@@ -1,290 +1,40 @@
-```gitignore
+```
 # Dependencies
 node_modules/
-.pnp/
-.pnp.js
 
-# Testing
-coverage/
-.nyc_output/
-coverage-final.json
-
-# Builds
-.next/
-.nuxt/
+# Build artifacts
 dist/
 build/
-out/
-.output/
-.svelte-kit/
+target/
 
-# Environment
-.env
-.env.local
-.env.*
-!.env.example
+# TypeScript/JavaScript build cache
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.swp
 
 # Logs
 *.log
 
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/modules/
-*.bin
-*.zip
-*.tar.gz
-*.rar
-.venv/
-env/
-venv/
-ENV/
-.venv.bak/
-venv.bak/
-.python-version
-
-# TypeScript
-*.tsbuildinfo
-*.js.map
-*.ts.map
-*.tsx.map
-*.jsx.map
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-
-# Browser extensions
-*.crx
-*.xpi
-*.nex
-
-# Compressed archives
-*.zip
-*.tar
-*.gz
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
-
-# System files
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Icon?
-.apdisk
-
-# Sensitive files
-config/secrets.yml
-secrets.yaml
-*.key
-*.pem
-*.p12
-*.jks
+# Environment variables
+.env
+.env.local
+*.env.*
 
 # IDE specific
-.vs/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-
-# Bower
-bower_components/
-
-# Grunt
-.grunt
-
-# JSHint
-.jshintrc
-
-# CoffeeScript
-coffee/
-*.coffee.md
-
-# Ember
-tmp/
-temp/
-
-# Sass
-.sass-cache/
-
-# Rails
-*.rbc
-.rake_tasks
-public/system/
-vendor/bundle/
-.bundle/
-.rbx/
-
-# Node
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Coverage directory used by tools like istanbul
-coverage/
-
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
-.grunt/
-
-# Bower dependency directory (https://bower.io/)
-bower_components/
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons (https://nodejs.org/api/addons.html)
-build/Release
-
-# Dependency directories
-node_modules/
-jspm_packages/
-
-# TypeScript cache files
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm/
-
-# Optional eslint cache
-.eslintcache
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env.test
-
-# next.js build output
-.next/
-out/
-
-# nuxt.js build output
-.nuxt/
-dist/
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file for the editor
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# DVC
-.dvc/
-
-# mlflow
-.mlflow/
-
-# Temporary files created by PyCharm
-*.iml
-*.iws
-*.pyc
-*.pyo
-*.pyd
-__pycache__/
-.coverage
-htmlcov/
-.pytest_cache/
-.hypothesis/
-.eggs/
-.venv/
-venv/
-env/
-
-# IntelliJ IDEA
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# WebStorm
-.idea/
-
-# Visual Studio Code
 .vscode/
+.idea/
 
-# Vim
-*.swp
-*.swo
-*~
+# Package lock files
+package-lock.json
 
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
-# End:
+# Coverage reports
+coverage/
+htmlcov/
+*.coverage
 
+# Testing
+.jest/
+.nyc_output/
 ```
