@@ -35,6 +35,10 @@ import { AlertModal } from "@/components/market/AlertModal";
 import { MarketCards } from "@/components/market/MarketCards";
 import { toast } from "sonner";
 import { startAlertMonitoring, stopAlertMonitoring, isMonitoringActive } from "@/lib/alertMonitor";
+import { OptionsTab } from "@/components/market/OptionsTab";
+import { FuturesTab } from "@/components/market/FuturesTab";
+import { FundsTab } from "@/components/market/FundsTab";
+import { CommoditiesTab } from "@/components/market/CommoditiesTab";
 import {
   Activity, Bell, Briefcase, ChevronDown, Clock, FileText, Loader2, Users,
   LogOut, Radio, RefreshCw, Search, Settings, Shield, TrendingUp,
@@ -445,17 +449,21 @@ export default function Dashboard() {
     { id: "tabloukhani", label: "تابلوخوانی", icon: Users, shortcut: "2" },
     { id: "signals", label: "سیگنال‌ها", icon: Radio, shortcut: "3" },
     { id: "results", label: "نتایج سیگنال", icon: FileText, shortcut: "4" },
-    { id: "gem", label: "کشف گنج", icon: Gem, shortcut: "5" },
-    { id: "news", label: "اخبار", icon: BookOpen, shortcut: "6" },
-    { id: "portfolio", label: "پرتفوی", icon: Briefcase, shortcut: "7" },
-    { id: "backtest", label: "بک‌تست", icon: BarChart3, shortcut: "8" },
+    { id: "options", label: "اختیار معامله", icon: TrendingUp, shortcut: "5" },
+    { id: "futures", label: "آتی", icon: TrendingDown, shortcut: "6" },
+    { id: "funds", label: "صندوق‌ها", icon: Briefcase, shortcut: "7" },
+    { id: "commodities", label: "کالا و ارز", icon: Coins, shortcut: "8" },
   ];
 
   // Tab‌های پنهانی (از طریق More قابل دسترس)
   const secondaryTabs = [
-    { id: "alerts", label: "هشدارها", icon: Shield },
+    { id: "gem", label: "کشف گنج", icon: Gem },
+    { id: "news", label: "اخبار", icon: BookOpen },
     { id: "codal", label: "کدال", icon: FileText },
+    { id: "portfolio", label: "پرتفوی", icon: Briefcase },
+    { id: "alerts", label: "هشدارها", icon: Shield },
     { id: "reports", label: "گزارش‌ها", icon: BarChart3 },
+    { id: "backtest", label: "بک‌تست", icon: BarChart3 },
     { id: "risk", label: "مدیریت ریسک", icon: TrendingDown },
     { id: "journal", label: "ژورنال", icon: BookOpen },
     { id: "paper", label: "معامله کاغذی", icon: Coins },
@@ -756,6 +764,10 @@ export default function Dashboard() {
             {activeTab === "tabloukhani" && <Suspense fallback={<TabLoader />}><LazyTablouKhaniTab instruments={instruments} onSelect={(i) => setSelectedInstrument(i as ClientInstrument)} /></Suspense>}
             {activeTab === "signals" && <SignalsTab localSignals={localSignals} onRefresh={() => void handleRefresh()} />}
             {activeTab === "results" && <Suspense fallback={<TabLoader />}><LazySignalResultsTab /></Suspense>}
+            {activeTab === "options" && <OptionsTab />}
+            {activeTab === "futures" && <FuturesTab />}
+            {activeTab === "funds" && <FundsTab />}
+            {activeTab === "commodities" && <CommoditiesTab />}
             {activeTab === "gem" && <Suspense fallback={<TabLoader />}><LazyGemHunterTab instruments={instruments} onSelect={(i) => setSelectedInstrument(i as ClientInstrument)} /></Suspense>}
             {activeTab === "news" && <Suspense fallback={<TabLoader />}><LazyNewsTab /></Suspense>}
             {activeTab === "portfolio" && <PortfolioTab portfolio={portfolio} onAdd={() => setModalsOpen(prev => ({ ...prev, portfolio: true }))} onRemove={handleRemovePortfolioItem} />}
