@@ -1,6 +1,6 @@
 /**
  * صف درخواست‌ها — مدیریت درخواست‌های شبکه
- * حداکثر ۱ درخواست همزمان، فاصله ۷۰۰ms، timeout ۱۰s، retry ۲ بار
+ * حداکثر ۴ درخواست همزمان، فاصله ۲۰۰ms، timeout ۱۰s، retry ۲ بار
  */
 
 interface QueueItem {
@@ -13,11 +13,11 @@ interface QueueItem {
   reject: (error: Error) => void;
 }
 
-const CONCURRENCY = 1;
-const DELAY_MS = 700;
+const CONCURRENCY = 4;
+const DELAY_MS = 200;
 const DEFAULT_TIMEOUT = 10_000;
 const DEFAULT_RETRIES = 2;
-const RETRY_DELAY = 3_000;
+const RETRY_DELAY = 2000;
 
 let _queue: QueueItem[] = [];
 let _running = 0;

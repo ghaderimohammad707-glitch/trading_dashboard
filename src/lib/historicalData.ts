@@ -260,11 +260,30 @@ export async function prefetchHistoricalData(
 }
 
 // ═══════════════════════════════════════════════════════
-//  Technical Indicator Calculations (unchanged)
+//  Technical Indicator Calculations with Memoization
 // ═══════════════════════════════════════════════════════
 
+// Memoization cache for expensive calculations
+const rsiCache = new Map<string, number | null>();
+const emaCache = new Map<string, number | null>();
+const macdCache = new Map<string, { macdLine: number; signal: number; histogram: number } | null>();
+const atrCache = new Map<string, number | null>();
+const bbCache = new Map<string, { upper: number; middle: number; lower: number } | null>();
+
+function makeCacheKey(bars: OHLCBar[], period: number, indicator: string): string {
+  // Use last bar date + length + period as cache key
+  const lastBar = bars[bars.length - 1];
+  return `${indicator}_${lastBar?.date || 'unknown'}_${bars.length}_${period}`;
+}
+
 export function computeRSI(bars: OHLCBar[], period = 14): number | null {
-  if (bars.length < period + 1) return null;
+  const key = makeCacheKey(bars, period, 'rsi');
+  if (rsiCache.has(key)) return rsiCache.get(key)!;
+  
+  if (bars.length < period + 1) {
+    rsiCache.set(key, null);
+    return null;
+  }
   const closes = bars.map((b) => b.close);
   const changes: number[] = [];
   for (let i = 1; i < closes.length; i++) changes.push(closes[i] - closes[i - 1]);
@@ -282,36 +301,62 @@ export function computeRSI(bars: OHLCBar[], period = 14): number | null {
     avgGain = (avgGain * (period - 1) + gain) / period;
     avgLoss = (avgLoss * (period - 1) + loss) / period;
   }
-  if (avgLoss === 0) return 100;
-  return 100 - 100 / (1 + avgGain / avgLoss);
+  if (avgLoss === 0) {
+    rsiCache.set(key, 100);
+    return 100;
+  }
+  const result = 100 - 100 / (1 + avgGain / avgLoss);
+  rsiCache.set(key, result);
+  return result;
 }
 
 export function computeEMA(bars: OHLCBar[], period: number): number | null {
-  if (bars.length < period) return null;
+  const key = makeCacheKey(bars, period, 'ema');
+  if (emaCache.has(key)) return emaCache.get(key)!;
+  
+  if (bars.length < period) {
+    emaCache.set(key, null);
+    return null;
+  }
   const closes = bars.map((b) => b.close);
   const k = 2 / (period + 1);
   let ema = 0;
   for (let i = 0; i < period; i++) ema += closes[i];
   ema /= period;
   for (let i = period; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k);
+  emaCache.set(key, ema);
   return ema;
 }
 
 export function computeMACD(bars: OHLCBar[]): { macdLine: number; signal: number; histogram: number } | null {
-  if (bars.length < 35) return null;
+  const key = makeCacheKey(bars, 0, 'macd');
+  if (macdCache.has(key)) return macdCache.get(key)!;
+  
+  if (bars.length < 35) {
+    macdCache.set(key, null);
+    return null;
+  }
   const ema12 = computeEMAArray(bars, 12);
   const ema26 = computeEMAArray(bars, 26);
-  if (!ema12 || !ema26) return null;
+  if (!ema12 || !ema26) {
+    macdCache.set(key, null);
+    return null;
+  }
   const macdValues: number[] = [];
   const offset = ema12.length - ema26.length;
   for (let i = 0; i < ema26.length; i++) macdValues.push(ema12[i + offset] - ema26[i]);
-  if (macdValues.length < 9) return null;
+  if (macdValues.length < 9) {
+    macdCache.set(key, null);
+    return null;
+  }
   const k = 2 / 10;
   let signalEma = 0;
   for (let i = 0; i < 9; i++) signalEma += macdValues[i];
   signalEma /= 9;
   for (let i = 9; i < macdValues.length; i++) signalEma = macdValues[i] * k + signalEma * (1 - k);
-  return { macdLine: macdValues[macdValues.length - 1], signal: signalEma, histogram: macdValues[macdValues.length - 1] - signalEma };
+  const result = { macdLine: macdValues[macdValues.length - 1], signal: signalEma, histogram: macdValues[macdValues.length - 1] - signalEma };
+  macdCache.set(key, result);
+  return result;
 }
 
 function computeEMAArray(bars: OHLCBar[], period: number): number[] | null {
@@ -336,7 +381,13 @@ export function computeSMA(bars: OHLCBar[], period: number): number | null {
 }
 
 export function computeATR(bars: OHLCBar[], period = 14): number | null {
-  if (bars.length < period + 1) return null;
+  const key = makeCacheKey(bars, period, 'atr');
+  if (atrCache.has(key)) return atrCache.get(key)!;
+  
+  if (bars.length < period + 1) {
+    atrCache.set(key, null);
+    return null;
+  }
   const trueRanges: number[] = [];
   for (let i = 1; i < bars.length; i++) {
     trueRanges.push(Math.max(
@@ -349,15 +400,24 @@ export function computeATR(bars: OHLCBar[], period = 14): number | null {
   for (let i = 0; i < period; i++) atr += trueRanges[i];
   atr /= period;
   for (let i = period; i < trueRanges.length; i++) atr = (atr * (period - 1) + trueRanges[i]) / period;
+  atrCache.set(key, atr);
   return atr;
 }
 
 export function computeBollingerBands(bars: OHLCBar[], period = 20, stdDev = 2): { upper: number; middle: number; lower: number } | null {
-  if (bars.length < period) return null;
+  const key = makeCacheKey(bars, period, `bb_${stdDev}`);
+  if (bbCache.has(key)) return bbCache.get(key)!;
+  
+  if (bars.length < period) {
+    bbCache.set(key, null);
+    return null;
+  }
   const closes = bars.slice(-period).map((b) => b.close);
   const middle = closes.reduce((a, b) => a + b, 0) / period;
   const std = Math.sqrt(closes.reduce((sum, c) => sum + Math.pow(c - middle, 2), 0) / period);
-  return { upper: middle + stdDev * std, middle, lower: middle - stdDev * std };
+  const result = { upper: middle + stdDev * std, middle, lower: middle - stdDev * std };
+  bbCache.set(key, result);
+  return result;
 }
 
 export function computeVWAP(bars: OHLCBar[]): number | null {
