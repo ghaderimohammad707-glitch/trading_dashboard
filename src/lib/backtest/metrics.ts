@@ -86,13 +86,15 @@ export function calculateAdvancedMetrics(
   // نوسان‌پذیری (Volatility)
   const avgReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length || 0;
   const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / dailyReturns.length;
-  const volatility = Math.sqrt(variance) * Math.sqrt(tradingDaysPerYear);
+  const volatility = dailyReturns.length > 0 ? Math.sqrt(variance) * Math.sqrt(tradingDaysPerYear) : 0;
   
   // انحراف معیار نزولی (Downside Deviation)
   const negativeReturns = dailyReturns.filter(r => r < 0);
-  const downsideDeviation = Math.sqrt(
-    negativeReturns.reduce((sum, r) => sum + Math.pow(r, 2), 0) / negativeReturns.length
-  ) * Math.sqrt(tradingDaysPerYear) || 0;
+  const downsideDeviation = negativeReturns.length > 0
+    ? Math.sqrt(
+        negativeReturns.reduce((sum, r) => sum + Math.pow(r, 2), 0) / negativeReturns.length
+      ) * Math.sqrt(tradingDaysPerYear)
+    : 0;
   
   // Calmar Ratio = بازده سالانه / حداکثر افت سرمایه
   const calmarRatio = maxDrawdown > 0 ? annualizedReturn / maxDrawdown : 0;

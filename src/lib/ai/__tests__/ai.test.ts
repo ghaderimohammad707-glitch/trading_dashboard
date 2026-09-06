@@ -2,7 +2,7 @@
  * تست‌های واحد برای ماژول‌های هوش مصنوعی فاز ۳
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import {
   detectMarketRegime,
   filterSignalByRegime,

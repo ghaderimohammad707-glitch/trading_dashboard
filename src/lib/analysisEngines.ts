@@ -1354,11 +1354,15 @@ export async function generateAllSignalsAsync(
       } catch {
         asyncResults.push(generateSignal(inst, codalBySymbol.get(inst.symbol)));
       }
-      await new Promise((r) => setTimeout(r, 100));
+      // No artificial delay — let the requestQueue handle throttling
     }
   }
 
-  await Promise.all([processCandidate(), processCandidate(), processCandidate(), processCandidate(), processCandidate()]);
+  // Process with 8 parallel workers for faster completion
+  await Promise.all([
+    processCandidate(), processCandidate(), processCandidate(), processCandidate(),
+    processCandidate(), processCandidate(), processCandidate(), processCandidate()
+  ]);
 
   const asyncSymbols = new Set(asyncResults.map((s) => s.symbol));
   const syncSignals = instruments
