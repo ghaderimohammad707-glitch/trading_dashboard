@@ -93,14 +93,15 @@ export function calculateRiskReward(
     // TP1: ریسک به ریوارد 1:1.5
     takeProfit1 = entryPrice + (currentATR * adjustedSlMultiplier * 1.5);
     
-    // TP2: ریسک به ریوارد 1:3
-    takeProfit2 = entryPrice + (currentATR * adjustedTpMultiplier);
+    // TP2: ریسک به ریوارد 1:3 (همیشه بزرگتر از TP1)
+    const tp2RiskReward = Math.max(3.0, adjustedTpMultiplier);
+    takeProfit2 = entryPrice + (currentATR * tp2RiskReward);
     
     reasoning.push(`سیگنال خرید شناسایی شد`);
     reasoning.push(`ATR فعلی: ${currentATR.toFixed(2)} واحد`);
     reasoning.push(`حد ضرر: ${adjustedSlMultiplier.toFixed(1)} برابر ATR زیر قیمت ورود`);
     reasoning.push(`حد سود اول: 1.5 برابر ریسک`);
-    reasoning.push(`حد سود دوم: ${adjustedTpMultiplier.toFixed(1)} برابر ATR`);
+    reasoning.push(`حد سود دوم: ${tp2RiskReward.toFixed(1)} برابر ATR`);
     
   } else { // SELL
     entryPrice = currentClose;
@@ -109,14 +110,15 @@ export function calculateRiskReward(
     // TP1: ریسک به ریوارد 1:1.5
     takeProfit1 = entryPrice - (currentATR * adjustedSlMultiplier * 1.5);
     
-    // TP2: ریسک به ریوارد 1:3
-    takeProfit2 = entryPrice - (currentATR * adjustedTpMultiplier);
+    // TP2: ریسک به ریوارد 1:3 (همیشه کوچکتر از TP1 برای فروش)
+    const tp2RiskReward = Math.max(3.0, adjustedTpMultiplier);
+    takeProfit2 = entryPrice - (currentATR * tp2RiskReward);
     
     reasoning.push(`سیگنال فروش شناسایی شد`);
     reasoning.push(`ATR فعلی: ${currentATR.toFixed(2)} واحد`);
     reasoning.push(`حد ضرر: ${adjustedSlMultiplier.toFixed(1)} برابر ATR بالای قیمت ورود`);
     reasoning.push(`حد سود اول: 1.5 برابر ریسک`);
-    reasoning.push(`حد سود دوم: ${adjustedTpMultiplier.toFixed(1)} برابر ATR`);
+    reasoning.push(`حد سود دوم: ${tp2RiskReward.toFixed(1)} برابر ATR`);
   }
   
   // محاسبه نسبت ریسک به ریوارد (بر اساس TP2)

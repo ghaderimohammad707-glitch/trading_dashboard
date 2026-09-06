@@ -37,6 +37,7 @@ export interface CompositeSignal {
   symbol: string;
   name: string;
   signal: SignalType;
+  action: 'buy' | 'sell' | 'hold'; // Added for compatibility with reporting modules
   strength: number; // 0 to 100
   technical: AnalysisResult;
   fundamental: AnalysisResult;
@@ -50,8 +51,34 @@ export interface CompositeSignal {
   targetPrice?: number; // Take profit target
   stopLoss?: number; // Stop loss level
   entryPrice?: number; // Entry price at signal time
+  currentPrice?: number; // Current price for reporting
   riskRewardRatio?: number; // Risk/Reward ratio
   confidence?: number; // Confidence score for AI assistant
+  // Fields for signalReason.ts compatibility
+  indicators?: {
+    rsi?: number;
+    rsiDivergence?: 'positive' | 'negative';
+    macd?: {
+      signal: 'bullish_crossover' | 'bearish_crossover' | 'neutral';
+      histogram: number;
+    };
+    bollingerBands?: {
+      upper: number;
+      middle: number;
+      lower: number;
+      bandwidth: number;
+    };
+    ema20?: number;
+    ema50?: number;
+    volumeRatio?: number;
+  };
+  tableauData?: {
+    smartMoneyFlow?: 'inflow' | 'outflow';
+    suspiciousVolume?: boolean;
+    realToLegalRatio?: number;
+    buyerPower?: number;
+    perCapitaBuy?: number;
+  };
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1226,10 +1253,18 @@ export function generateSignal(
     riskRewardRatio = Math.round((targetPct / slPct) * 10) / 10;
   }
 
+  // Map FinalSignalType to action
+  const signalToAction = (sig: string): 'buy' | 'sell' | 'hold' => {
+    if (sig === 'buy' || sig === 'BUY') return 'buy';
+    if (sig === 'sell' || sig === 'SELL') return 'sell';
+    return 'hold';
+  };
+
   return {
     symbol: inst.symbol,
     name: inst.name,
-    signal: brain.finalSignal,
+    signal: brain.finalSignal as any,
+    action: signalToAction(brain.finalSignal),
     strength: Math.min(100, Math.abs(brain.finalScore)),
     technical,
     fundamental,
@@ -1243,7 +1278,25 @@ export function generateSignal(
     targetPrice,
     stopLoss,
     entryPrice: inst.last,
+    currentPrice: inst.last,
     riskRewardRatio,
+    // Populate indicators for signalReason.ts compatibility
+    indicators: {
+      rsi: technical.details.rsi as number | undefined,
+      macd: technical.details.macd !== undefined ? {
+        signal: (technical.details.macd as number) > 0 ? 'bullish_crossover' : (technical.details.macd as number) < 0 ? 'bearish_crossover' : 'neutral',
+        histogram: technical.details.macdHistogram as number || 0
+      } : undefined,
+      bollingerBands: undefined,
+      volumeRatio: technical.details.volumeRatio as number | undefined
+    },
+    tableauData: {
+      smartMoneyFlow: tablouKhani.details.smartMoney as 'inflow' | 'outflow' | undefined,
+      suspiciousVolume: tablouKhani.details.suspiciousVolume === 1,
+      realToLegalRatio: tablouKhani.details.realToLegalRatio as number | undefined,
+      buyerPower: tablouKhani.details.buyerPower as number | undefined,
+      perCapitaBuy: tablouKhani.details.perCapitaBuy as number | undefined
+    }
   };
 }
 
@@ -1350,6 +1403,7 @@ export async function generateAllSignalsAsync(
           stopLoss: brain.finalSignal === "buy" ? Math.round(inst.last * (1 - slPct)) : brain.finalSignal === "sell" ? Math.round(inst.last * (1 + slPct)) : undefined,
           entryPrice: inst.last,
           riskRewardRatio: Math.round((targetPct / slPct) * 10) / 10,
+          action: brain.finalSignal === "buy" ? "buy" : brain.finalSignal === "sell" ? "sell" : "hold",
         });
       } catch {
         asyncResults.push(generateSignal(inst, codalBySymbol.get(inst.symbol)));
