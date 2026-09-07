@@ -58,6 +58,7 @@ const LazyTablouKhaniTab = lazy(() => import("@/components/market/TablouKhaniTab
 const LazyBacktestTab = lazy(() => import("@/components/market/BacktestTab").then(m => ({ default: m.BacktestTab })));
 const LazyAIAssistantTab = lazy(() => import("@/components/market/AIAssistantTab").then(m => ({ default: m.AIAssistantTab })));
 const LazyCustomDashboardTab = lazy(() => import("@/components/market/CustomDashboardTab").then(m => ({ default: m.CustomDashboardTab })));
+const LazyFundamentalTab = lazy(() => import("@/components/market/FundamentalTab").then(m => ({ default: m.FundamentalTab })));
 import { PortfolioTab } from "@/components/market/PortfolioTab";
 import { SignalsTab } from "@/components/market/SignalsTab";
 import { AlertsTab } from "@/components/market/AlertsTab";
@@ -457,6 +458,7 @@ export default function Dashboard() {
 
   // Tab‌های پنهانی (از طریق More قابل دسترس)
   const secondaryTabs = [
+    { id: "fundamental", label: "تحلیل بنیادی", icon: Award },
     { id: "gem", label: "کشف گنج", icon: Gem },
     { id: "news", label: "اخبار", icon: BookOpen },
     { id: "codal", label: "کدال", icon: FileText },
@@ -774,6 +776,7 @@ export default function Dashboard() {
             {activeTab === "backtest" && <Suspense fallback={<TabLoader />}><LazyBacktestTab /></Suspense>}
             {activeTab === "alerts" && <AlertsTab alerts={alerts} onAdd={() => setModalsOpen(prev => ({ ...prev, alerts: true }))} onRemove={handleRemoveAlert} onToggle={handleToggleAlert} />}
             {/* Secondary tabs */}
+            {activeTab === "fundamental" && <Suspense fallback={<TabLoader />}><LazyFundamentalTab /></Suspense>}
             {activeTab === "codal" && <Suspense fallback={<TabLoader />}><LazyCodalTab /></Suspense>}
             {activeTab === "reports" && <Suspense fallback={<TabLoader />}><LazyReportsTab /></Suspense>}
             {activeTab === "risk" && <RiskCalculatorTab />}
