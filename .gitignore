@@ -6,69 +6,39 @@ node_modules/
 dist/
 build/
 .next/
-out/
+.nuxt/
+public/build/
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Logs
+*.log
 
 # Environment variables
 .env
 .env.local
 .env.*
 
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
+# Temporary files
+*.tmp
+*.temp
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Temporary files
-*.tmp
+# IDE files
+.vscode/
+.idea/
 
 # Coverage reports
 coverage/
 htmlcov/
 
-# Python specific
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
+# Vite build cache
+node/.vite/
 
-# Virtual environments
-venv/
-.venv/
-env/
-ENV/
-
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
-
+# Vitest results
+node_modules/.vite/vitest/results.json
 ```
