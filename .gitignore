@@ -4,39 +4,48 @@ node_modules/
 
 # Build artifacts
 dist/
+build/
+.next/
+out/
 
-# Environment
+# Environment variables
 .env
 .env.local
 .env.*
 
-# Editor/IDE
+# IDE and editor files
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Logs
 *.log
 
-# Temp files
-*.tmp
-*.swp
-
-# Compiled/Build artifacts
-*.pyc
-__pycache__/
-build/
-target/
-.mypy_cache/
-.pytest_cache/
-
-# System files
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# Coverage
+# Temporary files
+*.tmp
+
+# Coverage reports
 coverage/
 htmlcov/
-.coverage
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
 
 # Compressed files
 *.zip
