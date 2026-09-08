@@ -72,7 +72,7 @@ function isRetryableError(error: any, config: RetryConfig): boolean {
   }
 
   // بررسی خطاهای شبکه
-  if (!navigator.onLine) {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
     return true;
   }
 
