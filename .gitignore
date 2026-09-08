@@ -1,45 +1,36 @@
 ```
-# Next.js
-.next/
-out/
-
-# TypeScript
-*.tsbuildinfo
-
 # Dependencies
 node_modules/
+
+# Build artifacts
+dist/
 
 # Environment
 .env
 .env.local
-.env.*
-
-# Build artifacts
-dist/
-build/
-.next/
+.env.
 
 # Logs
 *.log
 
-# Editor
+# Editor/IDE
 .vscode/
 .idea/
 
-# OS
+# OS generated
 .DS_Store
 Thumbs.db
 
-# TypeScript
-*.tsbuildinfo
-
-# Next.js
-.next/
-out/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # Temporary files
 *.tmp
 *.swp
+*.swo
 
 # Coverage
 coverage/
@@ -65,9 +56,4 @@ htmlcov/
 *.Z
 *.lz
 *.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
-
 ```
