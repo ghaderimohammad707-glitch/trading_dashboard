@@ -4,6 +4,7 @@
  * این ماژول از proxy کدال در vite.config.ts استفاده می‌کند تا مشکل CORS را حل کند
  */
 
+import { generateSecureId } from "./cryptoRandom";
 import type { Instrument } from "@/lib/clientFetch";
 
 export interface CodalReport {
@@ -105,7 +106,7 @@ export async function fetchCodalClient(
       const pubDate = letter.SentDateTime ? new Date(letter.SentDateTime) : new Date();
       
       return {
-        _id: letter.Id || `codal-${Date.now()}-${Math.random()}`,
+        _id: letter.Id || `codal-${generateSecureId(12)}`,
         symbol: letter.Symbol,
         title: letter.Title || 'بدون عنوان',
         publishDate: pubDate.getTime(),
