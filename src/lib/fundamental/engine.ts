@@ -3,10 +3,10 @@
  * بدون هیچ داده‌ی هاردکد - فقط هماهنگ‌کننده ماژول‌ها
  */
 
-import { FinancialStatement, FundamentalAnalysisResult, CompanyProfile, QuarterlyData, AnnualData } from './types.js';
-import { calculateFinancialRatios } from './ratioCalculator.js';
-import { calculateDCFValuation, calculatePEValuation, calculatePBValuation, createValuationResult } from './valuator.js';
-import { calculateFundamentalScore, analyzeTrends, determineRecommendation, identifyStrengthsAndRisks } from './scorer.js';
+import { FinancialStatement, FundamentalAnalysisResult, CompanyProfile, QuarterlyData, AnnualData } from './types';
+import { calculateFinancialRatios } from './ratioCalculator';
+import { calculateDCFValuation, calculatePEValuation, calculatePBValuation, createValuationResult } from './valuator';
+import { calculateFundamentalScore, analyzeTrends, determineRecommendation, identifyStrengthsAndRisks } from './scorer';
 
 /**
  * ورودی کامل برای تحلیل بنیادی

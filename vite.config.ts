@@ -35,13 +35,7 @@ export default defineConfig({
     ],
     exclude: ['pdfjs-dist'],
   },
-  esbuild: {
-    keepNames: false,
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true,
-    treeShaking: true,
-  },
+  esbuild: {},
   server: {
     hmr: false,
     proxy: {

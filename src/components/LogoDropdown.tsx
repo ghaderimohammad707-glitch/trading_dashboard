@@ -11,23 +11,23 @@ import {
 import logo from "@/assets/logo.svg";
 import { useAuth } from "@/hooks/use-auth";
 import { Home, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/router";
 
 export function LogoDropdown() {
+  const router = useRouter();
   const { isAuthenticated, signOut } = useAuth();
-  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate("/");
+      router.push("/");
     } catch (error) {
       console.error("Sign out error:", error);
     }
   };
 
   const handleGoHome = () => {
-    navigate("/");
+    router.push("/");
   };
 
   return (
