@@ -203,4 +203,4 @@ class SignalEngine {
 }
 
 export const signalEngine = new SignalEngine();
-export { Signal, SignalConfig };
+export type { Signal, SignalConfig };
