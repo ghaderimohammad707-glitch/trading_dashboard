@@ -28,6 +28,7 @@ import { generateAllSignalsAsync, type CompositeSignal } from "@/lib/analysisEng
 import { prefetchHistoricalData } from "@/lib/historicalData";
 import { saveSignalToResults } from "@/components/market/SignalResultsTab";
 import { getPerformanceStats } from "@/lib/performanceTracker";
+import { generateSecureId } from "@/lib/cryptoRandom";
 import { cn } from "@/lib/utils";
 import { getAll, put, remove as idbRemove, STORES } from "@/lib/idb";
 import { PortfolioModal } from "@/components/market/PortfolioModal";
@@ -353,7 +354,7 @@ export default function Dashboard() {
   // Portfolio handlers
   const handleAddPortfolioItem = async (item: any) => {
     try {
-      const newItem = { ...item, _id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), addedAt: Date.now() };
+      const newItem = { ...item, _id: generateSecureId(), addedAt: Date.now() };
       await put(STORES.PORTFOLIO, newItem);
       setPortfolio(prev => [...prev, newItem]);
       setModalsOpen(prev => ({ ...prev, portfolio: false }));
@@ -366,7 +367,7 @@ export default function Dashboard() {
     try {
       const newItems = items.map(item => ({
         ...item,
-        _id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        _id: generateSecureId(),
         addedAt: Date.now(),
       }));
       await Promise.all(newItems.map(item => put(STORES.PORTFOLIO, item)));
@@ -388,7 +389,7 @@ export default function Dashboard() {
   // Alerts handlers
   const handleAddAlert = async (alert: any) => {
     try {
-      const newAlert = { ...alert, _id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), createdAt: Date.now(), triggerCount: 0 };
+      const newAlert = { ...alert, _id: generateSecureId(), createdAt: Date.now(), triggerCount: 0 };
       await put(STORES.ALERTS, newAlert);
       setAlerts(prev => [...prev, newAlert]);
       setModalsOpen(prev => ({ ...prev, alerts: false }));

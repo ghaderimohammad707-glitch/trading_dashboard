@@ -1,7 +1,11 @@
 ```
 # Build artifacts
 dist/
-*.js
-*.css
+# TypeScript build info
 *.tsbuildinfo
+# Dependencies
+node_modules/
+# IDE files
+.vscode/
+.idea/
 ```
