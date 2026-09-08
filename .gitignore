@@ -1,4 +1,11 @@
 ```
+# Next.js
+.next/
+out/
+
+# TypeScript
+*.tsbuildinfo
+
 # Dependencies
 node_modules/
 
