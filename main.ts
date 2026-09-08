@@ -12,4 +12,5 @@ app.use("*", serveStatic({ root: "./dist" }));
 // 3) Fallback to index.html for the SPA
 app.get("*", serveStatic({ path: "./dist/index.html" }));
 
+// @ts-ignore - Deno is available at runtime
 Deno.serve(app.fetch);
