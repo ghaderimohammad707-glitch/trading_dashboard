@@ -5,6 +5,7 @@
 
 import { getCachedInstruments } from "./clientFetch";
 import { sendPriceAlert, sendSignalNotification } from "./browserNotifications";
+import { generateSecureId } from "./cryptoRandom";
 
 export interface PriceAlert {
   id: string;
@@ -37,7 +38,7 @@ function saveAlerts(alerts: PriceAlert[]): void {
 export function addPriceAlert(symbol: string, targetPrice: number, direction: "above" | "below"): PriceAlert {
   const alerts = getAlerts();
   const newAlert: PriceAlert = {
-    id: `pa-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    id: `pa-${generateSecureId(8)}`,
     symbol,
     targetPrice,
     direction,
