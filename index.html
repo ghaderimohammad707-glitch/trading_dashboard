@@ -10,6 +10,17 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  
+  <!-- Content Security Policy برای جلوگیری از XSS -->
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+                 script-src 'self' 'unsafe-inline' https://s3.tradingview.com; 
+                 style-src 'self' 'unsafe-inline'; 
+                 img-src 'self' data: https://*; 
+                 connect-src 'self' https://service.tsetmc.com https://api.telegram.org https://www.tradingview.com; 
+                 font-src 'self' data:; 
+                 frame-src 'self' https://www.tradingview.com;">
+  
   <title>نبض بازار — داشبورد بازار بورس ایران</title>
   <script>
     // اعمال تم ذخیره‌شده قبل از رندر

@@ -7,6 +7,8 @@
  * Includes retry logic for connection-closing errors during concurrent access.
  */
 
+import { generateSecureId } from "./cryptoRandom";
+
 const DB_NAME = "nabz-market";
 const DB_VERSION = 2; // Incremented to force schema refresh and fix transaction issues
 const MAX_RETRIES = 3;
@@ -273,7 +275,7 @@ export async function put<T>(storeName: StoreName, value: T): Promise<void> {
         ];
         let fixedValue = value;
         if (storeNamesNeedingId.includes(storeName) && value && typeof value === "object" && !(value as Record<string, unknown>)._id) {
-          fixedValue = { ...value, _id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8) } as T;
+          fixedValue = { ...value, _id: generateSecureId(16) } as T;
         }
         
         const tx = db.transaction(storeName, "readwrite", { durability: "relaxed" });
@@ -536,7 +538,7 @@ export async function bulkSave<T extends { _id?: string }>(
         for (const v of values) {
           // Ensure _id exists for stores that require it
           const item = !v._id 
-            ? { ...v, _id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }
+            ? { ...v, _id: generateSecureId(16) }
             : v;
             
           const req = store.put(item);

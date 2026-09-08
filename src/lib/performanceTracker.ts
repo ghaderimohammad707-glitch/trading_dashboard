@@ -2,6 +2,8 @@
  * ردیابی عملکرد سیگنال‌ها — ثبت تاریخچه و محاسبه دقت
  */
 
+import { generateSecureId } from "./cryptoRandom";
+
 export interface SignalOutcome {
   checkedAt: string;
   exitPrice: number;
@@ -46,7 +48,7 @@ export function saveSignalRecord(record: Omit<SignalRecord, "id" | "createdAt">)
   const history = getSignalHistory();
   const newRecord: SignalRecord = {
     ...record,
-    id: `sig_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `sig_${Date.now()}_${generateSecureId(8)}`,
     createdAt: new Date().toISOString(),
   };
   // Keep last 500 records
