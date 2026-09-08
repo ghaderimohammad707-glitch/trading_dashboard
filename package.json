@@ -10,22 +10,30 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
+  },
   "dependencies": {
     "axios": "^1.6.0",
+    "body-parser": "^2.3.0",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
     "date-fns": "^3.0.0",
     "exceljs": "^4.4.0",
-    "express": "^4.18.2",
+    "express": "^5.2.1",
     "framer-motion": "^13.2.0",
     "hono": "^4.13.7",
     "lucide-react": "^0.294.0",
-    "next": "^14.0.0",
+    "next": "^16.3.4",
     "pdfkit": "^0.14.0",
+    "qs": "^6.16.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.18.3",
-    "recharts": "^2.10.0"
+    "recharts": "^2.10.0",
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -35,10 +43,10 @@
     "@vitest/mocker": "^5.0.0",
     "@vitest/pretty-format": "^5.0.0",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32",
+    "postcss": "^8.5.28",
     "tailwindcss": "^3.4.0",
     "tinyrainbow": "^3.1.1",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.0"
+    "vitest": "^5.0.0"
   }
 }
