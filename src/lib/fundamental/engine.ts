@@ -3,10 +3,10 @@
  * بدون هیچ داده‌ی هاردکد - فقط هماهنگ‌کننده ماژول‌ها
  */
 
-import { FinancialStatement, FundamentalAnalysisResult, CompanyProfile, QuarterlyData, AnnualData } from './types.js';
-import { calculateFinancialRatios } from './ratioCalculator.js';
-import { calculateDCFValuation, calculatePEValuation, calculatePBValuation, createValuationResult } from './valuator.js';
-import { calculateFundamentalScore, analyzeTrends, determineRecommendation, identifyStrengthsAndRisks } from './scorer.js';
+import { FinancialStatement, FundamentalAnalysisResult, CompanyProfile, QuarterlyData, AnnualData } from './types';
+import { calculateFinancialRatios } from './ratioCalculator';
+import { calculateDCFValuation, calculatePEValuation, calculatePBValuation, createValuationResult } from './valuator';
+import { calculateFundamentalScore, analyzeTrends, determineRecommendation, identifyStrengthsAndRisks } from './scorer';
 
 /**
  * ورودی کامل برای تحلیل بنیادی
@@ -139,7 +139,7 @@ export function quickFundamentalAnalysis(
   statement: FinancialStatement,
   currentPrice: number,
   marketCap: number
-): Omit<FundamentalAnalysisResult, 'latestQuarterly' | 'latestAnnual' | 'trends'> {
+): Omit<FundamentalAnalysisResult, 'latestQuarterly' | 'latestAnnual' | 'trends'> & { latestQuarterly: null; latestAnnual: null } {
   const ratios = calculateFinancialRatios(statement, undefined, marketCap, undefined);
   
   const eps = statement.netIncome / statement.commonSharesOutstanding;

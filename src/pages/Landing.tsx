@@ -25,7 +25,7 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const SEGMENTS = [
   { value: "tse", shortLabel: "بورس", label: "بورس تهران", description: "شرکت‌های بزرگ و بنیادی", icon: TrendingUp },

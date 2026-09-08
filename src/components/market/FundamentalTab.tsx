@@ -9,9 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw, TrendingUp, TrendingDown, Award, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import type { FundamentalAnalysisResult, QuarterlyData, AnnualData } from "@/lib/fundamental/types.js";
-import { performFundamentalAnalysis, type FundamentalAnalysisInput } from "@/lib/fundamental/engine.js";
-import { fetchCompanyProfile, fetchFinancialStatements } from "@/lib/fundamental/codalFetcher.js";
+import type { FundamentalAnalysisResult, QuarterlyData, AnnualData } from "@/lib/fundamental/types";
+import { performFundamentalAnalysis, type FundamentalAnalysisInput } from "@/lib/fundamental/engine";
+import { fetchCompanyProfile, fetchFinancialStatements } from "@/lib/fundamental/codalFetcher";
 import { getCachedInstruments, type Instrument as ClientInstrument } from "@/lib/clientFetch";
 import { cn } from "@/lib/utils";
 

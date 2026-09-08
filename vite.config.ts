@@ -14,14 +14,7 @@ export default defineConfig({
   build: {
     sourcemap: false,
     rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router', 'react/jsx-runtime'],
-          'charts-vendor': ['lightweight-charts'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-tabs'],
-          'utils-vendor': ['date-fns', 'date-fns-jalali', 'clsx', 'tailwind-merge'],
-        },
-      },
+      output: {},
     },
     target: 'esnext',
     minify: 'esbuild',
@@ -42,14 +35,7 @@ export default defineConfig({
     ],
     exclude: ['pdfjs-dist'],
   },
-  esbuild: {
-    legalComments: 'none',
-    keepNames: false,
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true,
-    treeShaking: true,
-  },
+  esbuild: {},
   server: {
     hmr: false,
     proxy: {
