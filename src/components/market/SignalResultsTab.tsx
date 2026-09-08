@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { getAll, put, clear, STORES, bulkSave } from "@/lib/idb";
 import type { CompositeSignal } from "@/lib/analysisEngines";
 import { getCachedInstruments } from "@/lib/clientFetch";
+import { generateSecureId } from "@/lib/cryptoRandom";
 
 export interface SavedSignal extends CompositeSignal {
   _id: string;
@@ -43,7 +44,7 @@ export interface SavedSignal extends CompositeSignal {
  * Called when signals are generated
  */
 function genId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  return generateSecureId(16);
 }
 
 // Lightweight in-memory dedup cache (avoids IDB read on every save)

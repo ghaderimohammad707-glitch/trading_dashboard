@@ -4,6 +4,7 @@
  */
 
 import { getCachedInstruments } from "./clientFetch";
+import { generateSecureId } from "./cryptoRandom";
 
 export interface PaperTrade {
   id: string;
@@ -113,7 +114,7 @@ export function openPaperTrade(
   }
 
   const trade: PaperTrade = {
-    id: `pt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    id: `pt-${generateSecureId(12)}`,
     symbol,
     name: inst.name,
     side,

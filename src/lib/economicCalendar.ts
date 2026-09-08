@@ -6,6 +6,8 @@
  * توجه: در صورت عدم دسترسی به APIها، پیام مناسب نمایش داده می‌شود
  */
 
+import { generateSecureId } from "./cryptoRandom";
+
 export interface CalendarEvent {
   id: string;
   date: string;          // شمسی YYYY/MM/DD
@@ -241,7 +243,7 @@ async function fetchFromCodal(): Promise<CalendarEvent[]> {
       else if (title.includes('تقسیم')) category = 'split';
       
       events.push({
-        id: `codal-${letter.InsCode || Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        id: `codal-${generateSecureId(12)}`,
         date: toJalali(pubDate),
         title,
         category,

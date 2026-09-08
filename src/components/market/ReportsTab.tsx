@@ -71,6 +71,7 @@ export function ReportsTab() {
   }, []);
 
   const handleTestTelegram = async () => {
+    // نمایش راهنما به کاربر برای ذخیره در .env.local
     setTelegramConfig(botToken, chatId);
     const result = await testTelegramConnection();
     setTestResult(result);
@@ -252,6 +253,16 @@ export function ReportsTab() {
           <p className="text-xs text-muted-foreground">
             برای ارسال خودکار سیگنال‌ها به تلگرام، ربات بسازید و Chat ID را وارد کنید.
           </p>
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+            <p className="text-xs text-amber-600 font-medium">⚠️ نکته امنیتی مهم:</p>
+            <p className="text-xs text-amber-600 mt-1">
+              لطفاً توکن و Chat ID را در فایل <code className="bg-amber-600/10 px-1 rounded">.env.local</code> ذخیره کنید:
+            </p>
+            <pre className="text-xs font-mono mt-2 bg-black/5 p-2 rounded overflow-x-auto">
+              VITE_TELEGRAM_BOT_TOKEN=your_bot_token_here<br/>
+              VITE_TELEGRAM_CHAT_ID=your_chat_id_here
+            </pre>
+          </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">توکن ربات</label>
             <Input dir="ltr" value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF..." />

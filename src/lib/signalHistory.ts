@@ -4,6 +4,7 @@
  */
 
 import { getCachedInstruments } from "./clientFetch";
+import { generateSecureId } from "./cryptoRandom";
 import type { CompositeSignal } from "./analysisEngines";
 
 export interface SignalRecord {
@@ -69,7 +70,7 @@ export function recordSignal(signal: CompositeSignal): SignalRecord | null {
   if (recentDuplicate) return null;
 
   const record: SignalRecord = {
-    id: `sig-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    id: `sig-${generateSecureId(12)}`,
     symbol: signal.symbol,
     name: signal.name,
     signal: signal.signal,
