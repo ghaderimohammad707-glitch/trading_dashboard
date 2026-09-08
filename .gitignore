@@ -1,21 +1,4 @@
 ```
-# Build artifacts
-tsconfig.tsbuildinfo
-
-# Environment variables
-.env.local
-*.env.*
-
-# Dependencies
-node_modules/
-
-# Editors
-.vscode/
-.idea/
-
-# Logs
-*.log
-
-# Temp files
-*.tmp
+# TypeScript build artifacts
+*.tsbuildinfo
 ```
