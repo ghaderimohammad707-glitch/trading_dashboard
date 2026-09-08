@@ -1,7 +1,7 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion } from "framer-motion";
 import { Activity, ArrowLeft, ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";

@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowLeft, Sparkles, Zap, Shield, Layers, Star, Users, Award, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useRef } from "react";
 
 export function HeroSection() {

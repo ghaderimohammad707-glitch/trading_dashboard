@@ -2,60 +2,44 @@
 # Dependencies
 node_modules/
 
-# Build outputs
+# Environment
+.env
+.env.local
+.env.*
+
+# Build artifacts
 dist/
 build/
 .next/
-out/
-
-# TypeScript
-*.tsbuildinfo
-.next/
-
-# Environment variables
-.env
-.env.local
-*.env
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
 
 # Logs
 *.log
 
-# Temporary files
-*.tmp
+# Editor
+.vscode/
+.idea/
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
-# Coverage reports
+# TypeScript
+*.tsbuildinfo
+
+# Next.js
+.next/
+out/
+
+# Temporary files
+*.tmp
+*.swp
+
+# Coverage
 coverage/
 htmlcov/
-*.coverage
+.coverage
 
-# Python cache (if present in project)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# MyPy cache
-.mypy_cache/
-
-# Pytest cache
-.pytest_cache/
-
-# Distribution / packaging
-*.tar.gz
-*.whl
-*.egg-info/
-
-# Compression files
+# Compressed files
 *.zip
 *.gz
 *.tar
@@ -74,4 +58,9 @@ __pycache__/
 *.Z
 *.lz
 *.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+
 ```
