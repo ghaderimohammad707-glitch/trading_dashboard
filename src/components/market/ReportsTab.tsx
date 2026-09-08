@@ -71,10 +71,17 @@ export function ReportsTab() {
   }, []);
 
   const handleTestTelegram = async () => {
-    // نمایش راهنما به کاربر برای ذخیره در .env.local
-    setTelegramConfig(botToken, chatId);
-    const result = await testTelegramConnection();
-    setTestResult(result);
+    // بررسی اینکه کاربر توکن را در .env.local وارد کرده است
+    if (!botToken || !chatId) {
+      alert("لطفاً توکن و Chat ID را در فایل .env.local وارد کنید.");
+      return;
+    }
+    try {
+      const result = await testTelegramConnection();
+      setTestResult(result);
+    } catch (error) {
+      alert("خطا: " + (error instanceof Error ? error.message : "خطای ناشناخته"));
+    }
   };
 
   const handleSendSummary = async () => {

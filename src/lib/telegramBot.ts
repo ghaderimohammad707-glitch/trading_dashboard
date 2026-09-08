@@ -4,12 +4,12 @@
  * 
  * امنیت: توکن ربات باید در environment variables ذخیره شود
  * برای استفاده، متغیرهای VITE_TELEGRAM_BOT_TOKEN و VITE_TELEGRAM_CHAT_ID را در فایل .env.local تنظیم کنید
+ * 
+ * توجه: ذخیره توکن در localStorage یا هر محل دیگری غیرامن است و پشتیبانی نمی‌شود
  */
 
 import type { CompositeSignal } from "./analysisEngines";
 
-const BOT_TOKEN_KEY = "nabz_telegram_bot_token";
-const CHAT_ID_KEY = "nabz_telegram_chat_id"; // Deprecated - فقط برای سازگاری با نسخه‌های قدیمی
 const API_BASE = "https://api.telegram.org";
 
 /** گرفتن توکن از environment variable */
@@ -31,11 +31,13 @@ export function getTelegramConfig(): { botToken: string; chatId: string } {
 }
 
 /** تنظیمات تلگرام - فقط برای توسعه با environment variables */
-export function setTelegramConfig(botToken: string, chatId: string): void {
-  // هشدار امنیتی: ذخیره توکن در localStorage غیرمجاز است
-  console.warn("⚠️ لطفاً توکن و Chat ID را در فایل .env.local ذخیره کنید:");
+export function setTelegramConfig(_botToken: string, _chatId: string): void {
+  // ذخیره توکن در localStorage غیرمجاز است - فقط از environment variables استفاده کنید
+  console.warn("⚠️ خطای امنیتی: ذخیره توکن ربات تلگرام در برنامه پشتیبانی نمی‌شود.");
+  console.warn("لطفاً توکن و Chat ID را در فایل .env.local ذخیره کنید:");
   console.warn("VITE_TELEGRAM_BOT_TOKEN=your_bot_token");
   console.warn("VITE_TELEGRAM_CHAT_ID=your_chat_id");
+  throw new Error("ذخیره توکن تلگرام در localStorage غیرمجاز است. از environment variables استفاده کنید.");
 }
 
 /** بررسی اتصال تلگرام */
