@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { getAll, put, clear, STORES, bulkSave } from "@/lib/idb";
+import { generateSecureId } from "@/lib/cryptoRandom";
 import {
   LineChart,
   Line,
@@ -98,7 +99,7 @@ const TAGS = [
 ];
 
 function genId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  return generateSecureId(16);
 }
 
 const COLORS = ["#22c55e", "#ef4444", "#3b82f6", "#f59e0b", "#a855f7", "#06b6d4", "#ec4899", "#f97316"];
