@@ -10,6 +10,17 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  
+  <!-- Content Security Policy برای جلوگیری از XSS -->
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+                 script-src 'self' 'unsafe-inline' https://s3.tradingview.com; 
+                 style-src 'self' 'unsafe-inline'; 
+                 img-src 'self' data: https://*; 
+                 connect-src 'self' https://service.tsetmc.com https://api.telegram.org https://www.tradingview.com; 
+                 font-src 'self' data:; 
+                 frame-src 'self' https://www.tradingview.com;">
+  
   <title>نبض بازار — داشبورد بازار بورس ایران</title>
   <script>
     // اعمال تم ذخیره‌شده قبل از رندر
@@ -24,12 +35,15 @@
       } catch (e) {}
     })();
   </script>
-  <script type="module" crossorigin src="/assets/index-BO5bCDuk.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/react-vendor-CFNT7hM8.js">
-  <link rel="modulepreload" crossorigin href="/assets/ui-vendor-D1ow0EGi.js">
-  <link rel="modulepreload" crossorigin href="/assets/utils-vendor-DeRmtv56.js">
-  <link rel="modulepreload" crossorigin href="/assets/charts-vendor-BWj1miAy.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-CsHZmB5j.css">
+  <script type="module" crossorigin src="/assets/index-Dtmr8Vov.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/badge-C5XVeXoz.js">
+  <link rel="modulepreload" crossorigin href="/assets/activity-eOIRkkOY.js">
+  <link rel="modulepreload" crossorigin href="/assets/alert-triangle-B28RryBW.js">
+  <link rel="modulepreload" crossorigin href="/assets/bar-chart-3-BDW-nehZ.js">
+  <link rel="modulepreload" crossorigin href="/assets/x-circle-C3BysgqA.js">
+  <link rel="modulepreload" crossorigin href="/assets/clientFetch-CFjqBWZq.js">
+  <link rel="modulepreload" crossorigin href="/assets/tablouKhaniEngine-YIc_dgDC.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-DYXDQA1e.css">
 </head>
 
 <body>
