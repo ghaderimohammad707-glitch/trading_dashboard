@@ -1,6 +1,9 @@
 /**
  * ربات تلگرام — ارسال سیگنال‌ها و هشدارها
  * از طریق Telegram Bot API
+ * 
+ * امنیت: توکن ربات باید در environment variables ذخیره شود، نه در localStorage
+ * برای استفاده در production، متغیرهای VITE_TELEGRAM_BOT_TOKEN و VITE_TELEGRAM_CHAT_ID را تنظیم کنید
  */
 
 import type { CompositeSignal } from "./analysisEngines";
@@ -9,18 +12,40 @@ const BOT_TOKEN_KEY = "nabz_telegram_bot_token";
 const CHAT_ID_KEY = "nabz_telegram_chat_id";
 const API_BASE = "https://api.telegram.org";
 
+/** گرفتن توکن از environment variable یا localStorage (برای سازگاری) */
+function getBotTokenFromEnv(): string {
+  // اولویت با environment variable است (امن‌تر)
+  if (import.meta.env.VITE_TELEGRAM_BOT_TOKEN) {
+    return import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+  }
+  // fallback به localStorage فقط برای توسعه
+  return localStorage.getItem(BOT_TOKEN_KEY) || "";
+}
+
+function getChatIdFromEnv(): string {
+  if (import.meta.env.VITE_TELEGRAM_CHAT_ID) {
+    return import.meta.env.VITE_TELEGRAM_CHAT_ID;
+  }
+  return localStorage.getItem(CHAT_ID_KEY) || "";
+}
+
 /** تنظیمات تلگرام */
 export function getTelegramConfig(): { botToken: string; chatId: string } {
   return {
-    botToken: localStorage.getItem(BOT_TOKEN_KEY) || "",
-    chatId: localStorage.getItem(CHAT_ID_KEY) || "",
+    botToken: getBotTokenFromEnv(),
+    chatId: getChatIdFromEnv(),
   };
 }
 
-/** ذخیره تنظیمات تلگرام */
+/** ذخیره تنظیمات تلگرام - فقط برای توسعه */
 export function setTelegramConfig(botToken: string, chatId: string): void {
-  localStorage.setItem(BOT_TOKEN_KEY, botToken);
-  localStorage.setItem(CHAT_ID_KEY, chatId);
+  // هشدار امنیتی: در production از localStorage استفاده نکنید
+  if (import.meta.env.DEV) {
+    localStorage.setItem(BOT_TOKEN_KEY, botToken);
+    localStorage.setItem(CHAT_ID_KEY, chatId);
+  } else {
+    console.warn("⚠️ ذخیره توکن در localStorage در production غیرمجاز است. از environment variables استفاده کنید.");
+  }
 }
 
 /** بررسی اتصال تلگرام */

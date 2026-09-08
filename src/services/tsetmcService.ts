@@ -4,10 +4,13 @@ import type { CandleData, OrderBookLevel, MarketWatchData, InvestorTypeData } fr
 /**
  * سرویس ارتباط با سامانه TSETMC - پیاده‌سازی واقعی API
  * استفاده از اندپوینت‌های عمومی و مستندات TSETMC
+ * 
+ * امنیت: استفاده از HTTPS به جای HTTP برای رمزنگاری ترافیک
  */
 class TSETMCService {
   private client: AxiosInstance;
-  private baseUrl = 'http://service.tsetmc.com';
+  // استفاده از HTTPS برای امنیت - fallback به http فقط برای توسعه محلی
+  private baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://service.tsetmc.com';
   private cache = new Map<string, { data: any; timestamp: number }>();
   private readonly CACHE_TTL = 20000; // 20 ثانیه
   private instrumentCache = new Map<string, string>();

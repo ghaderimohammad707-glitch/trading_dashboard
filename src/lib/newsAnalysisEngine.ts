@@ -12,6 +12,7 @@
 
 import type { Instrument } from "@/lib/clientFetch";
 import type { CodalReport } from "@/lib/codalFetch";
+import { generateSecureId } from "@/lib/cryptoRandom";
 
 export interface NewsItem {
   _id: string;
@@ -459,7 +460,7 @@ export function createNewsItem(
   if (category === "market" || category === "company") impactScore += 15;
   
   return {
-    _id: `news-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    _id: `news-${Date.now()}-${generateSecureId(9)}`,
     title,
     summary,
     source,

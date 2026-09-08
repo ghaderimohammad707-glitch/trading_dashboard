@@ -31,7 +31,10 @@ export function TradingViewWidget({
   useEffect(() => {
     if (!containerRef.current) return;
     const container = containerRef.current;
-    container.innerHTML = "";
+    // پاک کردن محتوای قبلی با استفاده از textContent به جای innerHTML برای جلوگیری از XSS
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
     setLoadError(false);
     setLoading(true);
 
@@ -95,7 +98,12 @@ export function TradingViewWidget({
 
     return () => {
       if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
-      container.innerHTML = "";
+      // پاک کردن امن کانتینر بدون استفاده از innerHTML
+      if (containerRef.current) {
+        while (containerRef.current.firstChild) {
+          containerRef.current.removeChild(containerRef.current.firstChild);
+        }
+      }
     };
   }, [tvSymbol, retryCount]);
 
