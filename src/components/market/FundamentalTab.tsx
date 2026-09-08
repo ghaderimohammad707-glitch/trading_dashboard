@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw, TrendingUp, TrendingDown, Award, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import type { FundamentalAnalysisResult } from "@/lib/fundamental/types.js";
+import type { FundamentalAnalysisResult, QuarterlyData, AnnualData } from "@/lib/fundamental/types.js";
 import { performFundamentalAnalysis, type FundamentalAnalysisInput } from "@/lib/fundamental/engine.js";
 import { fetchCompanyProfile, fetchFinancialStatements } from "@/lib/fundamental/codalFetcher.js";
 import { getCachedInstruments, type Instrument as ClientInstrument } from "@/lib/clientFetch";
@@ -55,9 +55,9 @@ export function FundamentalTab({ onSymbolSelect }: FundamentalTabProps) {
           const input: FundamentalAnalysisInput = {
             symbol: inst.symbol,
             companyProfile: profile,
-            latestQuarterly: statements?.quarterly?.[0] || null,
-            latestAnnual: statements?.annual?.[0] || null,
-            previousAnnual: statements?.annual?.[1] || null,
+            latestQuarterly: (statements?.quarterly?.[0] || null) as QuarterlyData | null,
+            latestAnnual: (statements?.annual?.[0] || null) as AnnualData | null,
+            previousAnnual: (statements?.annual?.[1] || null) as AnnualData | null,
             industryData: {
               avgPE: 15,
               avgPB: 2,
@@ -276,7 +276,7 @@ export function FundamentalTab({ onSymbolSelect }: FundamentalTabProps) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <span>{Math.round(result.valuation.fairValue).toLocaleString()}</span>
+                      <span>{Math.round(result.valuation.fairValuePE || 0).toLocaleString()}</span>
                       {result.valuation.discountToFairValue > 0.15 && (
                         <CheckCircle className="size-3 text-emerald-400" />
                       )}

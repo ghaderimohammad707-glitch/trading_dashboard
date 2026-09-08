@@ -139,7 +139,7 @@ export function quickFundamentalAnalysis(
   statement: FinancialStatement,
   currentPrice: number,
   marketCap: number
-): Omit<FundamentalAnalysisResult, 'latestQuarterly' | 'latestAnnual' | 'trends'> {
+): Omit<FundamentalAnalysisResult, 'latestQuarterly' | 'latestAnnual' | 'trends'> & { latestQuarterly: null; latestAnnual: null } {
   const ratios = calculateFinancialRatios(statement, undefined, marketCap, undefined);
   
   const eps = statement.netIncome / statement.commonSharesOutstanding;
