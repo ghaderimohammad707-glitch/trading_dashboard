@@ -25,6 +25,7 @@ import {
 } from "@/lib/clientFetch";
 import { realTimeService } from "@/lib/realtimeDataService";
 import { generateAllSignalsAsync, type CompositeSignal } from "@/lib/analysisEngines";
+import type { CompleteSignal } from "@/lib/analysis";
 import { prefetchHistoricalData } from "@/lib/historicalData";
 import { saveSignalToResults } from "@/components/market/SignalResultsTab";
 import { getPerformanceStats } from "@/lib/performanceTracker";
@@ -190,7 +191,7 @@ export default function Dashboard() {
   const fontSize = useFontSize();
   const [instruments, setInstruments] = useState<ClientInstrument[]>([]);
   const [localCodal, setLocalCodal] = useState<CodalReport[]>([]);
-  const [localSignals, setLocalSignals] = useState<CompositeSignal[]>([]);
+  const [localSignals, setLocalSignals] = useState<CompleteSignal[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [fetchStatus, setFetchStatus] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("market");
@@ -714,7 +715,7 @@ export default function Dashboard() {
                   <Zap className="size-3 text-amber-500" />
                   <span>سیگنال فعال</span>
                 </div>
-                <div className="text-2xl font-bold text-amber-400 drop-shadow-lg">{localSignals.filter(s => s.signal !== "hold").length}</div>
+                <div className="text-2xl font-bold text-amber-400 drop-shadow-lg">{localSignals.filter(s => s.signal !== "HOLD").length}</div>
                 <div className="text-[10px] text-amber-500/70 mt-1">فرصت معاملاتی</div>
               </div>
             </AnimatedCard>

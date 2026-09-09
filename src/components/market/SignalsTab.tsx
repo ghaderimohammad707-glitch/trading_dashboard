@@ -1,11 +1,8 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { faNumber } from "@/lib/format";
-import type { CompositeSignal } from "@/lib/analysisEngines";
-import { TrendingUp, TrendingDown, Minus, Search, Filter } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Search, Filter, RefreshCw, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   RadarChart,
@@ -22,10 +19,14 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import type { CompleteSignal } from "@/lib/analysis";
+import { generateCompleteSignal } from "@/lib/analysis";
+import { fetchMarketSymbols, fetchStockRealTimeData, fetchHistoricalData, fetchOrderBookAndFlow } from "@/services/tsetmcRealDataService";
+import { toast } from "sonner";
 
 interface SignalsTabProps {
-  localSignals: CompositeSignal[];
+  localSignals: CompleteSignal[];
   onRefresh: () => void;
 }
 
@@ -43,15 +44,15 @@ function getSignalHistory(): SignalHistoryEntry[] {
     return data ? JSON.parse(data) : [];
   } catch { return []; }
 }
-function saveSignalHistory(signals: CompositeSignal[]) {
+function saveSignalHistory(signals: CompleteSignal[]) {
   const history = getSignalHistory();
   const now = Date.now();
   const newEntries = signals
-    .filter(s => s.signal !== "hold")
+    .filter(s => s.signal !== "HOLD")
     .map(s => ({
       symbol: s.symbol,
-      signal: s.signal,
-      strength: s.strength,
+      signal: s.signal.toLowerCase(),
+      strength: s.confidence,
       timestamp: now,
     }));
   // Keep last 200 entries
@@ -84,15 +85,13 @@ function ScoreBar({ label, score, icon }: { label: string; score: number; icon: 
   );
 }
 
-function SignalCard({ sig, rank }: { sig: CompositeSignal; rank: number }) {
+function SignalCard({ sig, rank }: { sig: CompleteSignal; rank: number }) {
   const [expanded, setExpanded] = useState(false);
 
   const radarData = useMemo(() => [
-    { name: "تکنیکال", value: Math.max(0, sig.technical.score), fullMark: 100 },
-    { name: "بنیادی", value: Math.max(0, sig.fundamental.score), fullMark: 100 },
-    { name: "حجمی", value: Math.max(0, sig.volume.score), fullMark: 100 },
-    { name: "تابلوخوانی", value: Math.max(0, sig.tablouKhani.score), fullMark: 100 },
-    { name: "احساسات", value: Math.max(0, sig.sentiment.score), fullMark: 100 },
+    { name: "تکنیکال", value: Math.max(0, sig.technicalAnalysis.confidence), fullMark: 100 },
+    { name: "بنیادی", value: Math.max(0, sig.fundamentalAnalysis.confidence), fullMark: 100 },
+    { name: "پول هوشمند", value: Math.max(0, sig.smartMoneyAnalysis.confidence), fullMark: 100 },
   ], [sig]);
 
   return (
@@ -108,7 +107,7 @@ function SignalCard({ sig, rank }: { sig: CompositeSignal; rank: number }) {
           <div className="flex items-center gap-2">
             <div className={cn(
               "flex size-7 items-center justify-center rounded-lg text-[11px] font-bold",
-              sig.signal === "buy" ? "bg-emerald-500/10 text-emerald-500" : sig.signal === "sell" ? "bg-rose-500/10 text-rose-500" : "bg-muted text-muted-foreground"
+              sig.signal === 'BUY' || sig.signal === 'STRONG_BUY' ? "bg-emerald-500/10 text-emerald-500" : sig.signal === 'SELL' || sig.signal === 'STRONG_SELL' ? "bg-rose-500/10 text-rose-500" : "bg-muted text-muted-foreground"
             )}>
               #{rank + 1}
             </div>
@@ -118,15 +117,15 @@ function SignalCard({ sig, rank }: { sig: CompositeSignal; rank: number }) {
             </div>
           </div>
           <Badge
-            variant={sig.signal === "buy" ? "default" : sig.signal === "sell" ? "destructive" : "secondary"}
+            variant={sig.signal === 'BUY' || sig.signal === 'STRONG_BUY' ? "default" : sig.signal === 'SELL' || sig.signal === 'STRONG_SELL' ? "destructive" : "secondary"}
             className={cn(
               "text-[10px] gap-1",
-              sig.signal === "buy" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-              sig.signal === "sell" && "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+              (sig.signal === 'BUY' || sig.signal === 'STRONG_BUY') && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+              (sig.signal === 'SELL' || sig.signal === 'STRONG_SELL') && "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
             )}
           >
-            {sig.signal === "buy" ? <TrendingUp className="size-3" /> : sig.signal === "sell" ? <TrendingDown className="size-3" /> : <Minus className="size-3" />}
-            {sig.signal === "buy" ? "خرید" : sig.signal === "sell" ? "فروش" : "نگهداری"}
+            {sig.signal === 'BUY' || sig.signal === 'STRONG_BUY' ? <TrendingUp className="size-3" /> : sig.signal === 'SELL' || sig.signal === 'STRONG_SELL' ? <TrendingDown className="size-3" /> : <Minus className="size-3" />}
+            {sig.signal === 'STRONG_BUY' ? "خرید قوی" : sig.signal === 'BUY' ? "خرید" : sig.signal === 'STRONG_SELL' ? "فروش قوی" : sig.signal === 'SELL' ? "فروش" : "نگهداری"}
           </Badge>
         </div>
 
@@ -134,28 +133,42 @@ function SignalCard({ sig, rank }: { sig: CompositeSignal; rank: number }) {
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] text-muted-foreground">قدرت سیگنال</span>
-            <span dir="ltr" className="text-xs font-bold tabular-nums-fa">{sig.strength}٪</span>
+            <span dir="ltr" className="text-xs font-bold tabular-nums-fa">{sig.confidence}٪</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-muted/40">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${sig.strength}%` }}
+              animate={{ width: `${sig.confidence}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
               className={cn(
                 "h-full rounded-full",
-                sig.signal === "buy" ? "bg-gradient-to-l from-emerald-500 to-emerald-400" : sig.signal === "sell" ? "bg-gradient-to-r from-rose-500 to-rose-400" : "bg-gradient-to-r from-muted-foreground/50 to-muted-foreground/30"
+                sig.signal === 'BUY' || sig.signal === 'STRONG_BUY' ? "bg-gradient-to-l from-emerald-500 to-emerald-400" : sig.signal === 'SELL' || sig.signal === 'STRONG_SELL' ? "bg-gradient-to-r from-rose-500 to-rose-400" : "bg-gradient-to-r from-muted-foreground/50 to-muted-foreground/30"
               )}
             />
           </div>
         </div>
 
+        {/* Entry/Exit Points */}
+        <div className="mb-3 p-2 rounded-lg bg-muted/20 text-[10px]">
+          <div className="flex justify-between mb-1">
+            <span>ورود:</span>
+            <span dir="ltr" className="font-semibold">{faNumber(sig.entryPrice)}</span>
+          </div>
+          <div className="flex justify-between mb-1 text-rose-500">
+            <span>حد ضرر:</span>
+            <span dir="ltr" className="font-semibold">{faNumber(sig.stopLoss)}</span>
+          </div>
+          <div className="flex justify-between text-emerald-500">
+            <span>حد سود ۱:</span>
+            <span dir="ltr" className="font-semibold">{faNumber(sig.takeProfit1)}</span>
+          </div>
+        </div>
+
         {/* Score bars */}
         <div className="flex flex-col gap-1.5 mb-3">
-          <ScoreBar label="تکنیکال" score={sig.technical.score} icon="📊" />
-          <ScoreBar label="بنیادی" score={sig.fundamental.score} icon="📋" />
-          <ScoreBar label="حجمی" score={sig.volume.score} icon="📈" />
-          <ScoreBar label="تابلو" score={sig.tablouKhani.score} icon="🔍" />
-          <ScoreBar label="احساسات" score={sig.sentiment.score} icon="💭" />
+          <ScoreBar label="تکنیکال" score={sig.technicalAnalysis.confidence} icon="📊" />
+          <ScoreBar label="بنیادی" score={sig.fundamentalAnalysis.confidence} icon="📋" />
+          <ScoreBar label="پول هوشمند" score={sig.smartMoneyAnalysis.confidence} icon="💰" />
         </div>
 
         {/* Reasons */}
@@ -164,7 +177,7 @@ function SignalCard({ sig, rank }: { sig: CompositeSignal; rank: number }) {
             "flex flex-col gap-0.5 pt-2 border-t border-border/30 transition-all duration-300",
             !expanded && "max-h-[60px] overflow-hidden relative"
           )}>
-            {sig.reasons.map((r, i) => (
+            {sig.reasons.map((r: string, i: number) => (
               <span key={i} className="text-[10px] leading-4 text-muted-foreground">{r}</span>
             ))}
             {!expanded && sig.reasons.length > 2 && (
@@ -198,7 +211,7 @@ const SEGMENT_FILTERS: { id: SegmentFilter; label: string; icon: string }[] = [
 ];
 
 /** Detect segment from signal name/symbol */
-function detectSegment(sig: CompositeSignal): string {
+function detectSegment(sig: CompleteSignal): string {
   const name = sig.name + " " + sig.symbol;
   if (name.includes("اختيار") || name.includes("اختیار")) return "option";
   if (name.includes("صندوق") || name.includes("سرمایه")) return "fund";
@@ -217,8 +230,9 @@ export function SignalsTab({ localSignals, onRefresh }: SignalsTabProps) {
 
   const filteredSignals = useMemo(() => {
     return localSignals.filter((s) => {
-      if (signalFilter !== "all" && s.signal !== signalFilter) return false;
-      if (s.strength < minStrength) return false;
+      const signalLower = s.signal.toLowerCase();
+      if (signalFilter !== "all" && signalLower !== signalFilter) return false;
+      if (s.confidence < minStrength) return false;
       if (segmentFilter !== "all" && detectSegment(s) !== segmentFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.trim().toLowerCase();
@@ -228,9 +242,9 @@ export function SignalsTab({ localSignals, onRefresh }: SignalsTabProps) {
     });
   }, [localSignals, signalFilter, minStrength, searchQuery, segmentFilter]);
 
-  const buyCount = localSignals.filter((s) => s.signal === "buy").length;
-  const sellCount = localSignals.filter((s) => s.signal === "sell").length;
-  const holdCount = localSignals.filter((s) => s.signal === "hold").length;
+  const buyCount = localSignals.filter((s) => s.signal === "BUY" || s.signal === "STRONG_BUY").length;
+  const sellCount = localSignals.filter((s) => s.signal === "SELL" || s.signal === "STRONG_SELL").length;
+  const holdCount = localSignals.filter((s) => s.signal === "HOLD").length;
   const tseCount = localSignals.filter((s) => detectSegment(s) === "tse").length;
   const ifbCount = localSignals.filter((s) => detectSegment(s) === "ifb").length;
   const optionCount = localSignals.filter((s) => detectSegment(s) === "option").length;
