@@ -15,6 +15,64 @@ export interface CandleData {
 }
 
 /**
+ * اندیکاتورهای تکنیکال محاسبه شده
+ */
+export interface TechnicalIndicators {
+  rsi?: number;
+  macd?: { value: number; signal: number; histogram: number };
+  ema20?: number;
+  ema50?: number;
+  ema200?: number;
+  bollingerBands?: { upper: number; middle: number; lower: number };
+  atr?: number; // Average True Range
+  stochastic?: { k: number; d: number };
+}
+
+/**
+ * سیگنال معاملاتی تولید شده
+ */
+export interface Signal {
+  id: string;
+  symbol: string;
+  type: 'BUY' | 'SELL' | 'HOLD';
+  strength: 'STRONG' | 'MODERATE' | 'WEAK';
+  generatedAt: number;
+  expiresAt?: number;
+  entryPoint: number;
+  stopLoss: number;
+  takeProfits: number[];
+  confidence: number; // 0-100
+  reasons: string[];
+  status: 'PENDING' | 'ACTIVE' | 'CLOSED' | 'CANCELLED';
+  result?: {
+    exitPrice?: number;
+    profitLoss?: number;
+    profitLossPercent?: number;
+    closedAt?: number;
+    notes?: string;
+  };
+}
+
+/**
+ * داده‌های کامل نماد برای تحلیل (توسعه یافته)
+ */
+export interface StockData {
+  symbol: string;
+  name: string;
+  currentPrice: number;
+  changePercent: number;
+  volume: number;
+  avgVolume: number;
+  marketCap: number;
+  peRatio?: number;
+  eps?: number;
+  history: CandleData[];
+  orderBook?: { bids: OrderBookLevel[]; asks: OrderBookLevel[] };
+  realInvestorPower?: number; // سرانه خرید حقیقی
+  legalInvestorPower?: number;
+}
+
+/**
  * سطحی از دفتر سفارشات (Order Book)
  */
 export interface OrderBookLevel {
