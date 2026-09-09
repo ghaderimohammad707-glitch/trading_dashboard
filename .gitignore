@@ -1,8 +1,32 @@
 ```
+# Build artifacts
+dist/
+build/
+
 # Dependencies
 node_modules/
-# Build artifacts
-tsconfig.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+*.env.*
+
 # Package lock files
 package-lock.json
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Logs
+*.log
 ```
