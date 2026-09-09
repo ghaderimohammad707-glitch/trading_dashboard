@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Upload, Search, X } from "lucide-react";
 import { getCachedInstruments } from "@/lib/clientFetch";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { toast } from "sonner";
 
 interface PortfolioModalProps {
@@ -76,13 +76,31 @@ export function PortfolioModal({ open, onOpenChange, onAdd, onImport }: Portfoli
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
-        const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: "binary" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+        const data = event.target?.result as ArrayBuffer;
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(data);
+        
+        const worksheet = workbook.getWorksheet(1);
+        if (!worksheet) {
+          toast.error("فایل اکسل خالی است");
+          return;
+        }
+
+        const jsonData: any[] = [];
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return; // Skip header row
+          const values = row.values as any[];
+          if (values.length > 1) {
+            jsonData.push({
+              symbol: values[1] || "",
+              quantity: values[2] || 0,
+              avgBuyPrice: values[3] || 0,
+              notes: values[4] || ""
+            });
+          }
+        });
 
         if (jsonData.length === 0) {
           toast.error("فایل اکسل خالی است");

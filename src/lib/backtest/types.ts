@@ -17,6 +17,8 @@ export interface Signal {
   stopLoss?: number;
 }
 
+import { generateSecureId } from "../cryptoRandom";
+
 export interface BacktestConfig {
   initialCapital: number;
   commissionRate: number; // e.g., 0.0008 (0.08%)
@@ -75,26 +77,36 @@ export function generateHistoricalData(
   
   // Volatility clustering state
   let currentVolatility = volatility;
+  
+  // Secure random generator for simulation
+  const secureRandom = () => {
+    const arr = new Uint8Array(1);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(arr);
+      return arr[0] / 255;
+    }
+    return Math.random();
+  };
 
   while (currentTime <= end) {
     // Skip weekends (simple check)
     const day = new Date(currentTime).getDay();
     if (day !== 0 && day !== 6) {
       // Update volatility (mean reverting)
-      currentVolatility = 0.9 * currentVolatility + 0.1 * volatility * (0.5 + Math.random());
+      currentVolatility = 0.9 * currentVolatility + 0.1 * volatility * (0.5 + secureRandom());
       
-      const dailyReturn = drift + currentVolatility * (Math.random() - 0.5) * 2;
+      const dailyReturn = drift + currentVolatility * (secureRandom() - 0.5) * 2;
       const open = currentPrice;
       const close = open * (1 + dailyReturn);
       
       // Generate High/Low based on range
-      const range = Math.abs(open - close) * (1 + Math.random() * 0.5);
-      const high = Math.max(open, close) + range * Math.random();
-      const low = Math.min(open, close) - range * Math.random();
+      const range = Math.abs(open - close) * (1 + secureRandom() * 0.5);
+      const high = Math.max(open, close) + range * secureRandom();
+      const low = Math.min(open, close) - range * secureRandom();
       
       // Volume correlates with volatility
       const baseVolume = 1000000;
-      const volume = Math.floor(baseVolume * (1 + Math.abs(dailyReturn) * 10) * (0.8 + Math.random() * 0.4));
+      const volume = Math.floor(baseVolume * (1 + Math.abs(dailyReturn) * 10) * (0.8 + secureRandom() * 0.4));
 
       data.push({
         timestamp: currentTime,
