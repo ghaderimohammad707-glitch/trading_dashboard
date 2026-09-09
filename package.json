@@ -82,10 +82,10 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@types/jest": "^30.0.0",
-    "@types/node": "^20.19.43",
+    "@types/node": "^24.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
     "@vitest/mocker": "^5.0.0",
     "@vitest/pretty-format": "^5.0.0",
     "autoprefixer": "^10.4.16",
