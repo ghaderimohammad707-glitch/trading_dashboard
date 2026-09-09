@@ -715,7 +715,7 @@ export default function Dashboard() {
                   <Zap className="size-3 text-amber-500" />
                   <span>سیگنال فعال</span>
                 </div>
-                <div className="text-2xl font-bold text-amber-400 drop-shadow-lg">{localSignals.filter(s => s.signal !== "HOLD").length}</div>
+                <div className="text-2xl font-bold text-amber-400 drop-shadow-lg">{localSignals.filter(s => s.type !== "HOLD").length}</div>
                 <div className="text-[10px] text-amber-500/70 mt-1">فرصت معاملاتی</div>
               </div>
             </AnimatedCard>
@@ -766,7 +766,7 @@ export default function Dashboard() {
               )
             )}
             {activeTab === "tabloukhani" && <Suspense fallback={<TabLoader />}><LazyTablouKhaniTab instruments={instruments} onSelect={(i) => setSelectedInstrument(i as ClientInstrument)} /></Suspense>}
-            {activeTab === "signals" && <SignalsTab localSignals={localSignals} onRefresh={() => void handleRefresh()} />}
+            {activeTab === "signals" && <SignalsTab signals={localSignals} onAddToPortfolio={(sig) => handleAddToPortfolio(sig)} />}
             {activeTab === "results" && <Suspense fallback={<TabLoader />}><LazySignalResultsTab /></Suspense>}
             {activeTab === "options" && <OptionsTab />}
             {activeTab === "futures" && <FuturesTab />}

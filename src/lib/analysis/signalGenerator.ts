@@ -1,292 +1,222 @@
 /**
- * موتور اصلی تولید سیگنال جامع
- * ترکیب تحلیل‌های تکنیکال، جریان پول هوشمند و بنیادی
- * برای تولید سیگنال‌های قطعی با دلایل کامل و شفاف
- * بدون هیچگونه داده فیک یا شبیه‌سازی شده
+ * موتور تولید سیگنال جامع
+ * ترکیب تحلیل تکنیکال، پول هوشمند و بنیادی برای تولید سیگنال‌های قطعی
  */
 
-import { TSETMCStockData, HistoricalDataPoint, OrderBookData } from '../../services/tsetmcRealDataService';
-import { TechnicalSignal, analyzeTechnical } from './technicalEngine';
-import { SmartMoneyAnalysis, analyzeSmartMoneyFlow } from './smartMoneyEngine';
-import { FundamentalAnalysis, analyzeFundamental } from './fundamentalEngine';
+import type { TechnicalIndicators } from './technicalEngine';
+import type { SmartMoneyAnalysis } from './smartMoneyEngine';
+import type { FundamentalAnalysis } from './fundamentalEngine';
 
 export interface CompleteSignal {
+  id: string;
   symbol: string;
-  name: string;
   timestamp: number;
-  
-  // سیگنال نهایی
-  signal: 'BUY' | 'SELL' | 'HOLD' | 'STRONG_BUY' | 'STRONG_SELL';
+  type: 'BUY' | 'SELL' | 'HOLD';
   confidence: number; // 0-100
-  
-  // نقاط ورود و خروج
   entryPrice: number;
-  entryRange: { min: number; max: number };
   stopLoss: number;
-  takeProfit1: number; // حد سود اول (کم‌ریسک)
-  takeProfit2: number; // حد سود دوم (متوسط)
-  takeProfit3: number; // حد سود سوم (پرریسک)
-  
-  // مدیریت سرمایه
-  suggestedPosition: number; // درصد پیشنهادی از سبد (0-100)
+  takeProfit1: number; // TP1 (کوتاه‌مدت)
+  takeProfit2: number; // TP2 (میان‌مدت)
+  takeProfit3: number; // TP3 (بلندمدت)
+  positionSize: number; // درصد پیشنهادی از سبد
   riskRewardRatio: number;
   
-  // دلایل کامل و شفاف
-  reasons: string[];
+  // دلایل کامل
   technicalReasons: string[];
   smartMoneyReasons: string[];
   fundamentalReasons: string[];
+  allReasons: string[];
   
-  // هشدارها و ریسک‌ها
-  warnings: string[];
-  risks: string[];
-  
-  // جزئیات تحلیل‌ها
-  technicalAnalysis: TechnicalSignal;
-  smartMoneyAnalysis: SmartMoneyAnalysis;
-  fundamentalAnalysis: FundamentalAnalysis;
-  
-  // وضعیت فعلی
-  currentPrice: number;
-  priceChange: number;
-  priceChangePercent: number;
-  
-  // متادیتا
-  analysisDate: string;
-  validUntil: string;
+  // وضعیت
+  status: 'active' | 'triggered' | 'cancelled' | 'completed';
+  triggeredAt?: number;
+  exitPrice?: number;
+  profitLoss?: number;
 }
 
 /**
- * محاسبه حد ضرر بر اساس ATR و حمایت‌های کلیدی
- */
-function calculateStopLoss(
-  currentPrice: number,
-  atr: number,
-  technicalSignal: TechnicalSignal
-): number {
-  const baseStop = currentPrice - (atr * 2.5); // حد ضرر اولیه بر اساس ATR
-  
-  // اگر سیگنال قوی است، حد ضرر را تنگ‌تر بگیر
-  if (technicalSignal.type === 'STRONG_BUY' || technicalSignal.type === 'BUY') {
-    return Math.max(baseStop, currentPrice * 0.92); // حداکثر ۸٪ ضرر
-  }
-  
-  return baseStop;
-}
-
-/**
- * محاسبه اهداف سود بر اساس مقاومت‌ها و ریسک‌ریوارد
- */
-function calculateTakeProfits(
-  currentPrice: number,
-  stopLoss: number,
-  technicalSignal: TechnicalSignal
-): { tp1: number; tp2: number; tp3: number } {
-  const risk = currentPrice - stopLoss;
-  
-  // هدف اول: ریسک‌ریوارد ۱:۱.۵
-  const tp1 = currentPrice + (risk * 1.5);
-  
-  // هدف دوم: ریسک‌ریوارد ۱:۲.۵
-  const tp2 = currentPrice + (risk * 2.5);
-  
-  // هدف سوم: ریسک‌ریوارد ۱:۴ یا بر اساس باندهای بولینگر
-  const bbUpper = technicalSignal.indicators.bollingerBands.upper;
-  const tp3 = bbUpper > 0 ? Math.min(currentPrice + (risk * 4), bbUpper) : currentPrice + (risk * 4);
-  
-  return { tp1, tp2, tp3 };
-}
-
-/**
- * تعیین درصد پیشنهادی سرمایه‌گذاری بر اساس اطمینان و ریسک
- */
-function calculateSuggestedPosition(
-  confidence: number,
-  signalType: CompleteSignal['signal'],
-  fundamentalUpside: number
-): number {
-  let basePosition = 10; // حداقل ۱۰٪
-  
-  // افزایش بر اساس اطمینان
-  basePosition += (confidence / 100) * 20; // تا ۲۰٪ اضافه
-  
-  // افزایش برای سیگنال‌های قوی
-  if (signalType === 'STRONG_BUY') basePosition += 15;
-  else if (signalType === 'BUY') basePosition += 10;
-  else if (signalType === 'STRONG_SELL' || signalType === 'SELL') return 0;
-  
-  // افزایش بر اساس پتانسیل رشد بنیادی
-  if (fundamentalUpside > 50) basePosition += 10;
-  else if (fundamentalUpside > 30) basePosition += 5;
-  
-  return Math.min(Math.round(basePosition), 50); // حداکثر ۵۰٪ در یک سهم
-}
-
-/**
- * تولید سیگنال جامع نهایی
+ * تولید سیگنال جامع بر اساس تمام تحلیل‌ها
  */
 export function generateCompleteSignal(
   symbol: string,
-  name: string,
-  stockData: TSETMCStockData,
-  historicalData: HistoricalDataPoint[],
-  orderBook: OrderBookData | null
-): CompleteSignal | null {
-  // اجرای تمام موتورها
-  const technicalAnalysis = analyzeTechnical(historicalData);
-  const smartMoneyAnalysis = analyzeSmartMoneyFlow(stockData, orderBook);
-  const fundamentalAnalysis = analyzeFundamental(stockData);
+  currentPrice: number,
+  technical: TechnicalIndicators,
+  smartMoney: SmartMoneyAnalysis,
+  fundamental: FundamentalAnalysis
+): CompleteSignal {
+  const allReasons: string[] = [];
+  let totalScore = 0;
+  let maxScore = 0;
   
-  // امتیازدهی وزنی به هر موتور
-  const technicalWeight = 0.35; // ۳۵٪ وزن به تحلیل تکنیکال
-  const smartMoneyWeight = 0.35; // ۳۵٪ وزن به جریان پول هوشمند
-  const fundamentalWeight = 0.30; // ۳۰٪ وزن به تحلیل بنیادی
-  
-  // تبدیل سیگنال‌ها به امتیاز عددی
-  const signalToScore = (sig: string): number => {
-    switch (sig) {
-      case 'STRONG_BUY': return 5;
-      case 'BUY': return 3;
-      case 'HOLD': return 0;
-      case 'SELL': return -3;
-      case 'STRONG_SELL': return -5;
-      default: return 0;
-    }
-  };
-  
-  const techScore = signalToScore(technicalAnalysis.type) * (technicalAnalysis.confidence / 100);
-  const smScore = signalToScore(smartMoneyAnalysis.smartMoneySignal) * (smartMoneyAnalysis.confidence / 100);
-  const fundScore = signalToScore(fundamentalAnalysis.recommendation) * (fundamentalAnalysis.confidence / 100);
-  
-  // امتیاز نهایی ترکیبی
-  const finalScore = 
-    (techScore * technicalWeight) + 
-    (smScore * smartMoneyWeight) + 
-    (fundScore * fundamentalWeight);
-  
-  // تعیین سیگنال نهایی
-  let signal: CompleteSignal['signal'] = 'HOLD';
-  if (finalScore >= 3.5) signal = 'STRONG_BUY';
-  else if (finalScore >= 1.5) signal = 'BUY';
-  else if (finalScore <= -3.5) signal = 'STRONG_SELL';
-  else if (finalScore <= -1.5) signal = 'SELL';
-  
-  // محاسبه اطمینان نهایی
-  const avgConfidence = 
-    (technicalAnalysis.confidence * technicalWeight) +
-    (smartMoneyAnalysis.confidence * smartMoneyWeight) +
-    (fundamentalAnalysis.confidence * fundamentalWeight);
-  
-  const confidence = Math.min(95, Math.round(avgConfidence + Math.abs(finalScore) * 5));
-  
-  // اگر داده کافی نیست، سیگنال HOLD با اطمینان پایین
-  if (historicalData.length < 50 || !stockData.pe || stockData.pe <= 0) {
-    return {
-      symbol,
-      name,
-      timestamp: Date.now(),
-      signal: 'HOLD',
-      confidence: Math.round(confidence * 0.5),
-      entryPrice: stockData.price,
-      entryRange: { min: stockData.price * 0.98, max: stockData.price * 1.02 },
-      stopLoss: stockData.price * 0.9,
-      takeProfit1: stockData.price * 1.05,
-      takeProfit2: stockData.price * 1.1,
-      takeProfit3: stockData.price * 1.15,
-      suggestedPosition: 0,
-      riskRewardRatio: 0,
-      reasons: ['داده‌های ناکافی برای تولید سیگنال قطعی'],
-      technicalReasons: technicalAnalysis.reasons.slice(0, 2),
-      smartMoneyReasons: smartMoneyAnalysis.reasons.slice(0, 2),
-      fundamentalReasons: fundamentalAnalysis.reasons.slice(0, 2),
-      warnings: ['تحلیل با داده‌های ناقص انجام شده است'],
-      risks: ['عدم قطعیت بالا به دلیل داده‌های محدود'],
-      technicalAnalysis,
-      smartMoneyAnalysis,
-      fundamentalAnalysis,
-      currentPrice: stockData.price,
-      priceChange: stockData.change,
-      priceChangePercent: stockData.changePercent,
-      analysisDate: new Date().toLocaleDateString('fa-IR'),
-      validUntil: new Date(Date.now() + 86400000).toLocaleDateString('fa-IR') // معتبر تا ۲۴ ساعت
-    };
+  // امتیازدهی تکنیکال (40% وزن)
+  maxScore += 40;
+  if (technical.rsi < 30) {
+    totalScore += 15;
+    allReasons.push(`RSI در اشباع فروش (${technical.rsi.toFixed(1)})`);
+  } else if (technical.rsi > 70) {
+    totalScore -= 15;
+    allReasons.push(`RSI در اشباع خرید (${technical.rsi.toFixed(1)})`);
   }
   
-  // محاسبه نقاط ورود و خروج
-  const atr = technicalAnalysis.indicators.atr;
-  const stopLoss = calculateStopLoss(stockData.price, atr, technicalAnalysis);
-  const { tp1, tp2, tp3 } = calculateTakeProfits(stockData.price, stopLoss, technicalAnalysis);
+  if (technical.macd.histogram > 0) {
+    totalScore += 10;
+    allReasons.push('MACD مثبت و صعودی');
+  } else {
+    totalScore -= 10;
+    allReasons.push('MACD منفی یا نزولی');
+  }
   
-  const risk = stockData.price - stopLoss;
-  const reward = tp2 - stockData.price;
-  const riskRewardRatio = risk > 0 ? reward / risk : 0;
+  if (technical.trend === 'uptrend') {
+    totalScore += 15;
+    allReasons.push(`روند صعودی (${technical.trend})`);
+  } else if (technical.trend === 'downtrend') {
+    totalScore -= 15;
+    allReasons.push(`روند نزولی (${technical.trend})`);
+  }
   
-  // محدوده ورود بهینه
-  const entryMin = signal.includes('BUY') ? stockData.price * 0.98 : stockData.price;
-  const entryMax = signal.includes('BUY') ? stockData.price * 1.02 : stockData.price;
+  // امتیازدهی پول هوشمند (35% وزن)
+  maxScore += 35;
+  if (smartMoney.smartMoneySignal === 'buy') {
+    totalScore += 20;
+    allReasons.push(...smartMoney.reasons.filter(r => r.includes('ورود') || r.includes('قدرت خریدار')));
+  } else if (smartMoney.smartMoneySignal === 'sell') {
+    totalScore -= 20;
+    allReasons.push(...smartMoney.reasons.filter(r => r.includes('خروج') || r.includes('ضعف خریدار')));
+  }
   
-  // محاسبه درصد پیشنهادی سرمایه‌گذاری
-  const suggestedPosition = calculateSuggestedPosition(confidence, signal, fundamentalAnalysis.upside);
+  if (smartMoney.confidence > 70) {
+    totalScore += 15;
+    allReasons.push(`اعتماد بالای پول هوشمند (${smartMoney.confidence}%)`);
+  }
   
-  // جمع‌آوری دلایل کامل
-  const allReasons: string[] = [];
+  // امتیازدهی بنیادی (25% وزن)
+  maxScore += 25;
+  if (fundamental.recommendation === 'strong_buy' || fundamental.recommendation === 'buy') {
+    totalScore += 15;
+    allReasons.push(...fundamental.reasons.filter(r => r.includes('پایین') || r.includes('زیر ارزش')));
+  } else if (fundamental.recommendation === 'strong_sell' || fundamental.recommendation === 'sell') {
+    totalScore -= 15;
+    allReasons.push(...fundamental.reasons.filter(r => r.includes('بالا') || r.includes('حباب')));
+  }
   
-  // دلایل تکنیکال
-  const techReasons = technicalAnalysis.reasons.map(r => `📊 تکنیکال: ${r}`);
-  allReasons.push(...techReasons);
+  if (fundamental.fundamentalScore > 70) {
+    totalScore += 10;
+  }
   
-  // دلایل جریان پول هوشمند
-  const smReasons = smartMoneyAnalysis.reasons.map(r => `💰 پول هوشمند: ${r}`);
-  allReasons.push(...smReasons);
+  // محاسبه اعتماد نهایی
+  const confidence = Math.max(10, Math.min(95, 50 + (totalScore / maxScore) * 50));
   
-  // دلایل بنیادی
-  const fundReasons = fundamentalAnalysis.reasons.map(r => `📈 بنیادی: ${r}`);
-  allReasons.push(...fundReasons);
+  // تعیین نوع سیگنال
+  let type: CompleteSignal['type'] = 'HOLD';
+  if (confidence >= 65 && totalScore > 0) {
+    type = 'BUY';
+  } else if (confidence >= 65 && totalScore < 0) {
+    type = 'SELL';
+  }
   
-  // جمع‌آوری هشدارها و ریسک‌ها
-  const warnings = [
-    ...smartMoneyAnalysis.alerts,
-    ...(riskRewardRatio < 1.5 ? ['⚠️ نسبت ریسک به ریوارد کمتر از ۱.۵ است'] : [])
-  ];
+  // محاسبه نقاط ورود، خروج و حد ضرر با استفاده از ATR
+  const atr = technical.atr || (currentPrice * 0.03); // پیش‌فرض 3% نوسان
   
-  const risks = [
-    ...fundamentalAnalysis.risks,
-    ...(stockData.changePercent < -5 ? ['ریسک ادامه روند نزولی کوتاه‌مدت'] : []),
-    ...(atr > stockData.price * 0.05 ? ['نوسان‌پذیری بالا - نیاز به مدیریت دقیق‌تر'] : [])
-  ];
+  const entryPrice = currentPrice;
+  const stopLoss = type === 'BUY' 
+    ? currentPrice - (atr * 2) 
+    : currentPrice + (atr * 2);
   
-  // تاریخ اعتبار سیگنال
-  const today = new Date();
-  const validUntil = new Date(today);
-  validUntil.setDate(validUntil.getDate() + (signal.includes('BUY') ? 3 : 1));
+  const takeProfit1 = type === 'BUY'
+    ? currentPrice + (atr * 1.5)
+    : currentPrice - (atr * 1.5);
+  
+  const takeProfit2 = type === 'BUY'
+    ? currentPrice + (atr * 3)
+    : currentPrice - (atr * 3);
+  
+  const takeProfit3 = type === 'BUY'
+    ? currentPrice + (atr * 5)
+    : currentPrice - (atr * 5);
+  
+  // محاسبه نسبت ریسک به ریوارد
+  const risk = Math.abs(entryPrice - stopLoss);
+  const reward = Math.abs(takeProfit1 - entryPrice);
+  const riskRewardRatio = reward / risk;
+  
+  // محاسبه اندازه پوزیشن پیشنهادی (بر اساس اعتماد)
+  const positionSize = type === 'HOLD' ? 0 : Math.min(25, Math.max(5, confidence * 0.3));
+  
+  // جداسازی دلایل
+  const technicalReasons = allReasons.filter((_, i) => i < 4);
+  const smartMoneyReasons = smartMoney.reasons.slice(0, 3);
+  const fundamentalReasons = fundamental.reasons.slice(0, 3);
   
   return {
+    id: generateSecureId(),
     symbol,
-    name,
     timestamp: Date.now(),
-    signal,
-    confidence,
-    entryPrice: stockData.price,
-    entryRange: { min: Math.round(entryMin), max: Math.round(entryMax) },
+    type,
+    confidence: Math.round(confidence),
+    entryPrice: Math.round(entryPrice),
     stopLoss: Math.round(stopLoss),
-    takeProfit1: Math.round(tp1),
-    takeProfit2: Math.round(tp2),
-    takeProfit3: Math.round(tp3),
-    suggestedPosition,
-    riskRewardRatio: Math.round(riskRewardRatio * 100) / 100,
-    reasons: allReasons,
-    technicalReasons: technicalAnalysis.reasons,
-    smartMoneyReasons: smartMoneyAnalysis.reasons,
-    fundamentalReasons: fundamentalAnalysis.reasons,
-    warnings,
-    risks,
-    technicalAnalysis,
-    smartMoneyAnalysis,
-    fundamentalAnalysis,
-    currentPrice: stockData.price,
-    priceChange: stockData.change,
-    priceChangePercent: stockData.changePercent,
-    analysisDate: today.toLocaleDateString('fa-IR'),
-    validUntil: validUntil.toLocaleDateString('fa-IR')
+    takeProfit1: Math.round(takeProfit1),
+    takeProfit2: Math.round(takeProfit2),
+    takeProfit3: Math.round(takeProfit3),
+    positionSize: Math.round(positionSize),
+    riskRewardRatio: parseFloat(riskRewardRatio.toFixed(2)),
+    technicalReasons,
+    smartMoneyReasons,
+    fundamentalReasons,
+    allReasons: allReasons.slice(0, 8), // حداکثر 8 دلیل اصلی
+    status: 'active',
   };
+}
+
+/**
+ * تولید ID امن با crypto
+ */
+function generateSecureId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback برای محیط‌های قدیمی
+  return 'sig_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+}
+
+/**
+ * ارزیابی سیگنال بر اساس قیمت فعلی
+ */
+export function evaluateSignal(signal: CompleteSignal, currentPrice: number): Partial<CompleteSignal> {
+  const updates: Partial<CompleteSignal> = {};
+  
+  if (signal.status === 'active') {
+    // بررسی فعال‌سازی سیگنال
+    if (signal.type === 'BUY' && currentPrice <= signal.entryPrice * 1.01) {
+      updates.status = 'triggered';
+      updates.triggeredAt = Date.now();
+    } else if (signal.type === 'SELL' && currentPrice >= signal.entryPrice * 0.99) {
+      updates.status = 'triggered';
+      updates.triggeredAt = Date.now();
+    }
+    
+    // بررسی حد ضرر
+    if (signal.type === 'BUY' && currentPrice <= signal.stopLoss) {
+      updates.status = 'cancelled';
+      updates.exitPrice = currentPrice;
+      updates.profitLoss = ((currentPrice - signal.entryPrice) / signal.entryPrice) * 100;
+    } else if (signal.type === 'SELL' && currentPrice >= signal.stopLoss) {
+      updates.status = 'cancelled';
+      updates.exitPrice = currentPrice;
+      updates.profitLoss = ((signal.entryPrice - currentPrice) / signal.entryPrice) * 100;
+    }
+    
+    // بررسی اهداف سود
+    if (signal.type === 'BUY' && currentPrice >= signal.takeProfit3) {
+      updates.status = 'completed';
+      updates.exitPrice = currentPrice;
+      updates.profitLoss = ((currentPrice - signal.entryPrice) / signal.entryPrice) * 100;
+    } else if (signal.type === 'SELL' && currentPrice <= signal.takeProfit3) {
+      updates.status = 'completed';
+      updates.exitPrice = currentPrice;
+      updates.profitLoss = ((signal.entryPrice - currentPrice) / signal.entryPrice) * 100;
+    }
+  }
+  
+  return updates;
 }
