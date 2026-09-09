@@ -1,32 +1,25 @@
 ```
 # Build artifacts
 dist/
-build/
+tsconfig.tsbuildinfo
 
 # Dependencies
 node_modules/
 
-# Temporary files
+# Logs and temp files
+*.log
 *.tmp
-*.swp
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Package lock files
-package-lock.json
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+# Editors
+.vscode/
+.idea/
 
-# TypeScript build info
-tsconfig.tsbuildinfo
-
-# Logs
-*.log
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
