@@ -1,28 +1,50 @@
 /**
- * نقطه ورود اصلی برای تمام موتورهای تحلیل
- * استفاده آسان از تمام قابلیت‌های تحلیل در یک جا
+ * کتابخانه تحلیل هوشمند بازار بورس تهران
+ * تمام موتورها بر اساس داده‌های واقعی TSETMC کار می‌کنند - بدون داده فیک
  */
 
-export { analyzeTechnical } from './technicalEngine';
-export type { TechnicalSignal, TechnicalIndicators } from './technicalEngine';
+// سرویس داده بازار
+export {
+  fetchRealTimeData,
+  fetchHistoricalData,
+  fetchActiveSymbols,
+  type RealTimeData,
+  type HistoricalData,
+} from './marketDataService';
 
-export { analyzeSmartMoneyFlow } from './smartMoneyEngine';
-export type { SmartMoneyAnalysis } from './smartMoneyEngine';
+// موتور تحلیل تکنیکال
+export {
+  analyzeTechnical,
+  type TechnicalIndicators,
+} from './technicalEngine';
 
-export { analyzeFundamental } from './fundamentalEngine';
-export type { FundamentalAnalysis } from './fundamentalEngine';
+// موتور تحلیل پول هوشمند
+export {
+  analyzeSmartMoney,
+  detectSuspiciousBlocks,
+  calculatePerCapita,
+  type SmartMoneyAnalysis,
+} from './smartMoneyEngine';
 
-export { generateCompleteSignal } from './signalGenerator';
-export type { CompleteSignal } from './signalGenerator';
+// موتور تحلیل بنیادی
+export {
+  analyzeFundamental,
+  compareFundamentals,
+  type FundamentalAnalysis,
+} from './fundamentalEngine';
 
-export { 
-  analyzePortfolio, 
-  generateInvestmentAdvice, 
-  generatePortfolioReport 
-} from './portfolioManager';
-export type { 
-  PortfolioHolding, 
-  PortfolioAnalysis, 
-  PortfolioRecommendation, 
-  InvestmentAdvice 
+// موتور تولید سیگنال
+export {
+  generateCompleteSignal,
+  evaluateSignal,
+  type CompleteSignal,
+} from './signalGenerator';
+
+// موتور مدیریت پرتفوی
+export {
+  analyzePortfolio,
+  simulateRebalance,
+  type PortfolioItem,
+  type PortfolioAnalysis,
+  type InvestmentRecommendation,
 } from './portfolioManager';

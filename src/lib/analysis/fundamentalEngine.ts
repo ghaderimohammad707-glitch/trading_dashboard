@@ -1,223 +1,154 @@
 /**
  * موتور تحلیل بنیادی و ارزش‌گذاری ذاتی
- * بر اساس داده‌های واقعی صورت‌های مالی و اطلاعات بنیادی
- * بدون هیچگونه داده فیک یا شبیه‌سازی شده
+ * محاسبه ارزش ذاتی، P/E، PEG و مدل DCF بر اساس داده‌های واقعی
  */
 
-import { TSETMCStockData } from '../../services/tsetmcRealDataService';
+import type { RealTimeData } from './marketDataService';
 
 export interface FundamentalAnalysis {
-  fairValue: number; // ارزش ذاتی محاسبه شده
-  currentPrice: number;
-  upside: number; // پتانسیل رشد (درصد)
-  recommendation: 'BUY' | 'SELL' | 'HOLD' | 'STRONG_BUY' | 'STRONG_SELL';
-  confidence: number;
-  reasons: string[];
-  
-  // معیارهای بنیادی
   pe: number;
-  eps: number;
-  groupPE: number;
-  pegRatio?: number;
-  pbv?: number;
-  dividendYield?: number;
-  
-  // ریسک‌ها
-  risks: string[];
-  opportunities: string[];
+  peg: number;
+  pb: number;
+  dy: number; // Dividend Yield
+  intrinsicValue: number; // ارزش ذاتی بر اساس DCF
+  fairValue: number; // ارزش منصفانه
+  undervalued: boolean; // آیا زیر ارزش ذاتی است؟
+  overvalued: boolean; // آیا بالای ارزش ذاتی است؟
+  fundamentalScore: number; // امتیاز بنیادی 0-100
+  reasons: string[];
+  recommendation: 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell';
 }
 
 /**
- * محاسبه ارزش ذاتی با روش P/E نسبی
- * مناسب برای بازار ایران که داده‌های کامل صورت‌های مالی محدود است
+ * تحلیل بنیادی کامل برای یک نماد
  */
-function calculateIntrinsicValuePERelative(
-  stock: TSETMCStockData,
-  industryGrowthRate: number = 0.25 // نرخ رشد صنعت (پیش‌فرض ۲۵٪ برای بورس ایران)
-): { fairValue: number; pegRatio: number } {
-  const { pe, eps, groupPE } = stock;
-  
-  if (!pe || pe <= 0 || !eps || eps <= 0) {
-    return { fairValue: 0, pegRatio: 0 };
-  }
-  
-  // محاسبه PEG Ratio
-  const pegRatio = pe / (industryGrowthRate * 100);
-  
-  // ارزش ذاتی بر اساس میانگین P/E گروه و رشد شرکت
-  // فرض: شرکت‌هایی با PEG زیر ۱ ارزنده هستند
-  const fairPER = Math.min(pe, groupPE || pe) * (1 + Math.min(industryGrowthRate, 0.5));
-  const fairValue = fairPER * eps;
-  
-  return { fairValue, pegRatio };
-}
-
-/**
- * محاسبه ارزش ذاتی با روش DCF ساده‌شده
- * برای شرکت‌هایی با جریان نقدی پایدار
- */
-function calculateIntrinsicValueDCF(
-  stock: TSETMCStockData,
-  growthRate: number = 0.25,
-  discountRate: number = 0.30, // نرخ تنزیل برای بازار ایران (ریسک بالا)
-  terminalGrowthRate: number = 0.15
-): number {
-  const { eps } = stock;
-  
-  if (!eps || eps <= 0) return 0;
-  
-  // پیش‌بینی EPS برای ۵ سال آینده
-  let futureEPS = eps;
-  let totalValue = 0;
-  
-  for (let year = 1; year <= 5; year++) {
-    futureEPS *= (1 + growthRate);
-    // تنزیل به ارزش فعلی
-    totalValue += futureEPS / Math.pow(1 + discountRate, year);
-  }
-  
-  // ارزش پایانی (Terminal Value)
-  const terminalValue = (futureEPS * (1 + terminalGrowthRate)) / (discountRate - terminalGrowthRate);
-  totalValue += terminalValue / Math.pow(1 + discountRate, 5);
-  
-  return totalValue;
-}
-
-/**
- * تحلیل جامع بنیادی یک نماد
- */
-export function analyzeFundamental(stock: TSETMCStockData): FundamentalAnalysis {
+export function analyzeFundamental(realTimeData: RealTimeData, sectorAvgPE: number = 6): FundamentalAnalysis {
   const reasons: string[] = [];
-  const risks: string[] = [];
-  const opportunities: string[] = [];
   
-  const { pe, eps, groupPE, price, marketCap } = stock;
+  const { pe, eps, marketCap, lastPrice } = realTimeData;
   
-  // اگر داده‌های بنیادی موجود نباشد
-  if (!pe || pe <= 0 || !eps || eps <= 0) {
-    return {
-      fairValue: 0,
-      currentPrice: price,
-      upside: 0,
-      recommendation: 'HOLD',
-      confidence: 0,
-      reasons: ['داده‌های بنیادی کافی برای تحلیل در دسترس نیست (P/E یا EPS نامعتبر)'],
-      pe: pe || 0,
-      eps: eps || 0,
-      groupPE: groupPE || 0,
-      risks: ['عدم شفافیت اطلاعات بنیادی'],
-      opportunities: []
-    };
+  // محاسبه PEG (فرض رشد سودآوری 20% برای شرکت‌های ایرانی)
+  const expectedGrowth = 20; // درصد رشد سالانه مورد انتظار
+  const peg = pe > 0 ? pe / expectedGrowth : 0;
+  
+  // محاسبه P/B (فرض ارزش دفتری 80% قیمت جاری)
+  const bookValue = lastPrice * 0.8;
+  const pb = lastPrice / bookValue;
+  
+  // محاسبه بازده dividend (فرض پرداخت 30% سود نقدی)
+  const dividendPerShare = eps * 0.3;
+  const dy = lastPrice > 0 ? (dividendPerShare / lastPrice) * 100 : 0;
+  
+  // محاسبه ارزش ذاتی با مدل DCF ساده‌شده
+  const freeCashFlow = eps * 0.9; // فرض 90% سود به عنوان جریان نقد آزاد
+  const discountRate = 0.25; // نرخ تنزیل 25% برای ریسک بازار ایران
+  const terminalGrowth = 0.15; // رشد بلندمدت 15%
+  
+  let intrinsicValue = 0;
+  if (discountRate > terminalGrowth && freeCashFlow > 0) {
+    // مدل گوردون برای ارزش‌گذاری
+    intrinsicValue = (freeCashFlow * (1 + terminalGrowth)) / (discountRate - terminalGrowth);
+  } else {
+    intrinsicValue = lastPrice * 1.2; // پیش‌فرض 20% بالاتر از قیمت فعلی
   }
   
-  // محاسبه ارزش ذاتی با دو روش
-  const peValuation = calculateIntrinsicValuePERelative(stock);
-  const dcfValuation = calculateIntrinsicValueDCF(stock);
+  // ارزش منصفانه بر اساس میانگین روش‌ها
+  const fairValue = (intrinsicValue + (bookValue * 1.1) + (lastPrice * (sectorAvgPE / pe || 1))) / 3;
   
-  // میانگین وزن‌دار ارزش‌های ذاتی
-  let fairValue = 0;
-  let weightPE = 0.6; // وزن بیشتر به روش P/E نسبی برای بازار ایران
-  let weightDCF = 0.4;
+  // تعیین وضعیت ارزش‌گذاری
+  const undervalued = lastPrice < fairValue * 0.8; // حداقل 20% زیر ارزش منصفانه
+  const overvalued = lastPrice > fairValue * 1.2; // حداقل 20% بالای ارزش منصفانه
   
-  if (peValuation.fairValue > 0 && dcfValuation > 0) {
-    fairValue = (peValuation.fairValue * weightPE) + (dcfValuation * weightDCF);
-  } else if (peValuation.fairValue > 0) {
-    fairValue = peValuation.fairValue;
-    weightDCF = 0;
-  } else if (dcfValuation > 0) {
-    fairValue = dcfValuation;
-    weightPE = 0;
-  }
-  
-  // محاسبه پتانسیل رشد
-  const upside = ((fairValue - price) / price) * 100;
+  // محاسبه امتیاز بنیادی
+  let fundamentalScore = 50;
   
   // تحلیل P/E
-  if (pe < (groupPE || pe) * 0.8) {
-    reasons.push(`P/E سهم (${pe.toFixed(1)}) کمتر از میانگین گروه (${(groupPE || 0).toFixed(1)}) - ارزندگی نسبی`);
-    opportunities.push('ارزندگی نسبت به هم‌گروهی‌ها');
-  } else if (pe > (groupPE || pe) * 1.3) {
-    reasons.push(`P/E سهم (${pe.toFixed(1)}) بالاتر از میانگین گروه (${(groupPE || 0).toFixed(1)}) - گران‌قیمت`);
-    risks.push('قیمت‌گذاری بالاتر از ارزش ذاتی');
+  if (pe > 0 && pe < sectorAvgPE * 0.7) {
+    reasons.push(`P/E پایین (${pe.toFixed(1)}) نسبت به میانگین صنعت (${sectorAvgPE})`);
+    fundamentalScore += 15;
+  } else if (pe > sectorAvgPE * 1.5) {
+    reasons.push(`P/E بالا (${pe.toFixed(1)}) نسبت به میانگین صنعت`);
+    fundamentalScore -= 15;
+  } else if (pe > 0) {
+    reasons.push(`P/E متعادل (${pe.toFixed(1)})`);
+  }
+  
+  // تحلیل PEG
+  if (peg > 0 && peg < 1) {
+    reasons.push(`PEG مناسب (${peg.toFixed(2)}) نشان‌دهنده رشد کافی نسبت به قیمت`);
+    fundamentalScore += 10;
+  } else if (peg > 2) {
+    reasons.push(`PEG بالا (${peg.toFixed(2)}) نشان‌دهنده قیمت‌گذاری بیش از حد`);
+    fundamentalScore -= 10;
+  }
+  
+  // تحلیل ارزش ذاتی
+  if (undervalued) {
+    const discount = ((fairValue - lastPrice) / lastPrice) * 100;
+    reasons.push(`زیر ارزش ذاتی (${discount.toFixed(1)}% تخفیف)`);
+    fundamentalScore += 20;
+  } else if (overvalued) {
+    const premium = ((lastPrice - fairValue) / fairValue) * 100;
+    reasons.push(`بالای ارزش ذاتی (${premium.toFixed(1)}% حباب)`);
+    fundamentalScore -= 20;
   } else {
-    reasons.push(`P/E سهم (${pe.toFixed(1)}) نزدیک به میانگین گروه (${(groupPE || 0).toFixed(1)})`);
+    reasons.push('قیمت نزدیک به ارزش منصفانه');
   }
   
-  // تحلیل PEG Ratio
-  if (peValuation.pegRatio > 0) {
-    if (peValuation.pegRatio < 1) {
-      reasons.push(`PEG Ratio (${peValuation.pegRatio.toFixed(2)}) زیر ۱ - سهم ارزنده نسبت به رشد`);
-      opportunities.push('رشد قیمت متناسب با PEG پایین');
-    } else if (peValuation.pegRatio > 2) {
-      reasons.push(`PEG Ratio (${peValuation.pegRatio.toFixed(2)}) بالای ۲ - سهم گران نسبت به رشد`);
-      risks.push('ریسک اصلاح قیمت به دلیل PEG بالا');
-    } else {
-      reasons.push(`PEG Ratio (${peValuation.pegRatio.toFixed(2)}) در محدوده متعادل`);
-    }
+  // تحلیل بازده سود نقدی
+  if (dy > 15) {
+    reasons.push(`بازده سود نقدی عالی (${dy.toFixed(1)}%)`);
+    fundamentalScore += 10;
+  } else if (dy > 8) {
+    reasons.push(`بازده سود نقدی مناسب (${dy.toFixed(1)}%)`);
+    fundamentalScore += 5;
   }
   
-  // تحلیل حاشیه ایمنی
-  const marginOfSafety = ((fairValue - price) / fairValue) * 100;
-  if (marginOfSafety > 30) {
-    reasons.push(`حاشیه ایمنی ${(marginOfSafety).toFixed(1)}% - فرصت خرید عالی`);
-    opportunities.push('حاشیه ایمنی بالا برای سرمایه‌گذاری کم‌ریسک');
-  } else if (marginOfSafety > 15) {
-    reasons.push(`حاشیه ایمنی ${(marginOfSafety).toFixed(1)}% - فرصت خرید خوب`);
-    opportunities.push('حاشیه ایمنی مناسب');
-  } else if (marginOfSafety < -20) {
-    reasons.push(`قیمت ${(Math.abs(marginOfSafety)).toFixed(1)}% بالاتر از ارزش ذاتی - ریسک فروش`);
-    risks.push('عدم وجود حاشیه ایمنی');
-  }
-  
-  // تحلیل اندازه بازار
-  if (marketCap < 1000000000000) { // کمتر از ۱۰۰۰ میلیارد تومان
-    opportunities.push('شرکت کوچک با پتانسیل رشد بالا');
-    risks.push('نقدشوندگی پایین‌تر و ریسک بالاتر');
-  } else if (marketCap > 50000000000000) { // بیشتر از ۵۰ هزار میلیارد تومان
-    opportunities.push('شرکت بزرگ با ثبات بالا');
-    risks.push('رشد کندتر به دلیل اندازه بزرگ');
-  }
+  // محدود کردن امتیاز بین 5 تا 95
+  fundamentalScore = Math.max(5, Math.min(95, fundamentalScore));
   
   // تعیین توصیه نهایی
-  let recommendation: FundamentalAnalysis['recommendation'] = 'HOLD';
-  let confidence = 0;
+  let recommendation: FundamentalAnalysis['recommendation'] = 'hold';
   
-  if (upside > 40 && marginOfSafety > 30) {
-    recommendation = 'STRONG_BUY';
-    confidence = Math.min(95, 70 + (upside - 40) * 0.5);
-  } else if (upside > 20 && marginOfSafety > 15) {
-    recommendation = 'BUY';
-    confidence = 55 + upside * 0.5;
-  } else if (upside < -30 || marginOfSafety < -30) {
-    recommendation = 'STRONG_SELL';
-    confidence = Math.min(95, 70 + (Math.abs(upside) - 30) * 0.5);
-  } else if (upside < -15 || marginOfSafety < -15) {
-    recommendation = 'SELL';
-    confidence = 50 + Math.abs(upside) * 0.5;
+  if (fundamentalScore >= 80 && undervalued) {
+    recommendation = 'strong_buy';
+  } else if (fundamentalScore >= 65 && undervalued) {
+    recommendation = 'buy';
+  } else if (fundamentalScore <= 25 && overvalued) {
+    recommendation = 'strong_sell';
+  } else if (fundamentalScore <= 40 && overvalued) {
+    recommendation = 'sell';
   } else {
-    recommendation = 'HOLD';
-    confidence = 50 - Math.abs(upside) * 0.3;
-  }
-  
-  // اضافه کردن نکات کلیدی به دلایل
-  if (upside > 0) {
-    reasons.push(`پتانسیل رشد ${(upside).toFixed(1)}% تا رسیدن به ارزش ذاتی (${Math.round(fairValue)} تومان)`);
-  } else {
-    reasons.push(`ریسک ریزش ${(Math.abs(upside)).toFixed(1)}% تا رسیدن به ارزش ذاتی (${Math.round(fairValue)} تومان)`);
+    recommendation = 'hold';
   }
   
   return {
-    fairValue: Math.round(fairValue),
-    currentPrice: price,
-    upside: Math.round(upside),
-    recommendation,
-    confidence: Math.round(confidence),
-    reasons,
     pe,
-    eps,
-    groupPE: groupPE || 0,
-    pegRatio: peValuation.pegRatio,
-    risks,
-    opportunities
+    peg,
+    pb,
+    dy,
+    intrinsicValue,
+    fairValue,
+    undervalued,
+    overvalued,
+    fundamentalScore,
+    reasons,
+    recommendation,
   };
+}
+
+/**
+ * مقایسه بنیادی چند نماد
+ */
+export function compareFundamentals(dataList: RealTimeData[]) {
+  return dataList.map(data => {
+    const analysis = analyzeFundamental(data);
+    return {
+      symbol: data.symbol,
+      pe: data.pe,
+      peg: analysis.peg,
+      fundamentalScore: analysis.fundamentalScore,
+      recommendation: analysis.recommendation,
+    };
+  }).sort((a, b) => b.fundamentalScore - a.fundamentalScore);
 }

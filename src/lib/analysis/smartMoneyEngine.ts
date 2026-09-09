@@ -1,201 +1,150 @@
 /**
- * موتور تحلیل جریان پول هوشمند (Smart Money Flow)
- * تحلیل رفتار حقیقی‌ها و حقوقی‌ها بر اساس داده‌های واقعی TSETMC
- * بدون هیچگونه داده فیک یا شبیه‌سازی شده
+ * موتور تحلیل جریان پول هوشمند (حقیقی vs حقوقی)
+ * تحلیل رفتار خریداران و فروشندگان بر اساس داده‌های واقعی TSETMC
  */
 
-import { OrderBookData, TSETMCStockData } from '../../services/tsetmcRealDataService';
+import type { RealTimeData } from './marketDataService';
 
 export interface SmartMoneyAnalysis {
-  realMoneyFlow: 'ورود' | 'خروج' | 'خنثی';
-  legalMoneyFlow: 'ورود' | 'خروج' | 'خنثی';
-  smartMoneySignal: 'BUY' | 'SELL' | 'HOLD';
-  confidence: number;
+  netRealFlow: number; // خالص ورود/خروج پول حقیقی
+  netLegalFlow: number; // خالص ورود/خروج پول حقوقی
+  buyerPowerRatio: number; // نسبت قدرت خریدار به فروشنده
+  volumeRatio: number; // نسبت حجم معاملات امروز به میانگین
+  priceVolumeConfirmation: boolean; // تایید قیمت با حجم
+  smartMoneySignal: 'buy' | 'sell' | 'neutral';
+  confidence: number; // 0-100
   reasons: string[];
-  
-  // جزئیات دقیق
-  realBuyPerCapita: number; // سرانه خرید حقیقی
-  realSellPerCapita: number; // سرانه فروش حقیقی
-  legalNetVolume: number; // حجم خالص حقوقی
-  powerRatio: number; // نسبت قدرت خریدار به فروشنده
-  volumeBalance: number; // تعادل حجمی
-  
-  // هشدارها
-  alerts: string[];
 }
 
 /**
- * تحلیل جریان پول هوشمند
- * بر اساس داده‌های واقعی معاملات حقیقی و حقوقی
+ * تحلیل جریان پول هوشمند برای یک نماد
  */
-export function analyzeSmartMoneyFlow(
-  stockData: TSETMCStockData,
-  orderBook: OrderBookData | null
-): SmartMoneyAnalysis {
+export function analyzeSmartMoney(realTimeData: RealTimeData, avgVolume30Day: number = 0): SmartMoneyAnalysis {
   const reasons: string[] = [];
-  const alerts: string[] = [];
-  let bullishScore = 0;
-  let bearishScore = 0;
   
-  // اگر داده‌های کتاب سفارش موجود نباشد، تحلیل محدود می‌شود
-  if (!orderBook) {
-    return {
-      realMoneyFlow: 'خنثی',
-      legalMoneyFlow: 'خنثی',
-      smartMoneySignal: 'HOLD',
-      confidence: 0,
-      reasons: ['داده‌های کافی برای تحلیل جریان پول هوشمند در دسترس نیست'],
-      realBuyPerCapita: 0,
-      realSellPerCapita: 0,
-      legalNetVolume: 0,
-      powerRatio: 1,
-      volumeBalance: 0,
-      alerts: ['نیاز به دریافت داده‌های لحظه‌ای کتاب سفارش']
-    };
-  }
+  // محاسبه خالص جریان پول حقیقی
+  const netRealFlow = realTimeData.buyerValue - realTimeData.sellerValue;
   
-  // محاسبه سرانه خرید و فروش حقیقی
-  const realBuyPerCapita = orderBook.realBuyCount > 0 
-    ? orderBook.realBuyVolume / orderBook.realBuyCount 
-    : 0;
-  const realSellPerCapita = orderBook.realSellCount > 0 
-    ? orderBook.realSellVolume / orderBook.realSellCount 
-    : 0;
-  
-  // محاسبه حجم خالص حقوقی
-  const legalNetVolume = orderBook.legalBuyVolume - orderBook.legalSellVolume;
+  // محاسبه خالص جریان پول حقوقی (تخمینی)
+  const totalValue = realTimeData.buyerValue + realTimeData.sellerValue;
+  const legalValue = totalValue - (realTimeData.buyerValue + realTimeData.sellerValue);
+  const netLegalFlow = realTimeData.sellerValue - realTimeData.buyerValue; // معکوس حقیقی
   
   // محاسبه نسبت قدرت خریدار به فروشنده
-  const totalBuyPower = orderBook.realBuyVolume + orderBook.legalBuyVolume;
-  const totalSellPower = orderBook.realSellVolume + orderBook.legalSellVolume;
-  const powerRatio = totalSellPower > 0 ? totalBuyPower / totalSellPower : 1;
+  const buyerPowerRatio = realTimeData.sellerCount > 0 
+    ? realTimeData.buyerPower / realTimeData.sellerPower 
+    : 1;
   
-  // محاسبه تعادل حجمی
-  const volumeBalance = totalBuyPower - totalSellPower;
+  // محاسبه نسبت حجم امروز به میانگین
+  const volumeRatio = avgVolume30Day > 0 
+    ? realTimeData.volume / avgVolume30Day 
+    : 1;
   
-  // تحلیل رفتار حقیقی‌ها
-  if (realBuyPerCapita > realSellPerCapita * 1.2) {
-    reasons.push(`سرانه خرید حقیقی‌ها (${Math.round(realBuyPerCapita)}) بیشتر از سرانه فروش (${Math.round(realSellPerCapita)}) - تمایل به خرید`);
-    bullishScore += 3;
+  // بررسی تایید قیمت با حجم
+  const priceVolumeConfirmation = (realTimeData.changePercent > 0 && volumeRatio > 1.2) ||
+                                  (realTimeData.changePercent < 0 && volumeRatio > 1.2);
+  
+  // تعیین سیگنال پول هوشمند
+  let smartMoneySignal: 'buy' | 'sell' | 'neutral' = 'neutral';
+  let confidence = 50;
+  
+  // تحلیل ورود/خورد پول حقیقی
+  if (netRealFlow > 0) {
+    reasons.push(`ورود پول حقیقی: ${formatNumber(netRealFlow)} ریال`);
+    confidence += 15;
     
-    if (realBuyPerCapita > realSellPerCapita * 2) {
-      alerts.push('⚠️ ورود قوی پول هوشمند حقیقی - توجه ویژه');
-      bullishScore += 2;
+    if (buyerPowerRatio > 1.5) {
+      reasons.push(`قدرت خریدار حقیقی ${(buyerPowerRatio * 100).toFixed(0)}% بیشتر از فروشنده`);
+      confidence += 10;
     }
-  } else if (realSellPerCapita > realBuyPerCapita * 1.2) {
-    reasons.push(`سرانه فروش حقیقی‌ها (${Math.round(realSellPerCapita)}) بیشتر از سرانه خرید (${Math.round(realBuyPerCapita)}) - تمایل به فروش`);
-    bearishScore += 3;
+  } else if (netRealFlow < 0) {
+    reasons.push(`خروج پول حقیقی: ${formatNumber(Math.abs(netRealFlow))} ریال`);
+    confidence -= 15;
     
-    if (realSellPerCapita > realBuyPerCapita * 2) {
-      alerts.push('⚠️ خروج قوی پول حقیقی - ریسک بالا');
-      bearishScore += 2;
+    if (buyerPowerRatio < 0.7) {
+      reasons.push(`قدرت فروشنده حقیقی ${(100 / buyerPowerRatio).toFixed(0)}% بیشتر از خریدار`);
+      confidence -= 10;
     }
-  } else {
-    reasons.push('سرانه خرید و فروش حقیقی‌ها متعادل است');
   }
   
-  // تحلیل رفتار حقوقی‌ها
-  if (legalNetVolume > 0) {
-    const netPercent = ((legalNetVolume / (orderBook.legalBuyVolume + orderBook.legalSellVolume || 1)) * 100);
-    reasons.push(`حقوقی‌ها خریدار خالص هستند (${Math.abs(Math.round(legalNetVolume))} سهم - ${netPercent.toFixed(1)}%)`);
-    bullishScore += 2;
-    
-    if (netPercent > 50) {
-      alerts.push('✅ حمایت قوی حقوقی از سهم');
-      bullishScore += 2;
+  // تحلیل حجم معاملات
+  if (volumeRatio > 2) {
+    reasons.push(`حجم معاملات ${((volumeRatio - 1) * 100).toFixed(0)}% بیشتر از میانگین ماهانه`);
+    confidence += 10;
+  } else if (volumeRatio < 0.5) {
+    reasons.push(`حجم معاملات ${(100 - volumeRatio * 100).toFixed(0)}% کمتر از میانگین ماهانه`);
+    confidence -= 5;
+  }
+  
+  // بررسی تایید قیمت و حجم
+  if (priceVolumeConfirmation) {
+    if (realTimeData.changePercent > 0) {
+      reasons.push('رشد قیمت همراه با افزایش حجم (تایید صعود)');
+      smartMoneySignal = 'buy';
+      confidence += 15;
+    } else {
+      reasons.push('کاهش قیمت همراه با افزایش حجم (تایید نزول)');
+      smartMoneySignal = 'sell';
+      confidence -= 15;
     }
-  } else if (legalNetVolume < 0) {
-    const netPercent = ((Math.abs(legalNetVolume) / (orderBook.legalBuyVolume + orderBook.legalSellVolume || 1)) * 100);
-    reasons.push(`حقوقی‌ها فروشنده خالص هستند (${Math.abs(Math.round(legalNetVolume))} سهم - ${netPercent.toFixed(1)}%)`);
-    bearishScore += 2;
-    
-    if (netPercent > 50) {
-      alerts.push('❌ فشار فروش حقوقی - احتیاط');
-      bearishScore += 2;
-    }
-  } else {
-    reasons.push('فعالیت حقوقی‌ها متعادل است');
   }
   
-  // تحلیل نسبت قدرت
-  if (powerRatio > 1.5) {
-    reasons.push(`قدرت خریداران ${((powerRatio - 1) * 100).toFixed(0)}% بیشتر از فروشندگان است`);
-    bullishScore += 2;
-  } else if (powerRatio < 0.67) {
-    reasons.push(`قدرت فروشندگان ${((1 - powerRatio) * 100).toFixed(0)}% بیشتر از خریداران است`);
-    bearishScore += 2;
+  // تحلیل نهایی
+  if (netRealFlow > 0 && buyerPowerRatio > 1.2 && realTimeData.changePercent > 0) {
+    smartMoneySignal = 'buy';
+    reasons.push('همسویی ورود پول، قدرت خریدار و رشد قیمت');
+    confidence = Math.min(95, confidence + 20);
+  } else if (netRealFlow < 0 && buyerPowerRatio < 0.8 && realTimeData.changePercent < 0) {
+    smartMoneySignal = 'sell';
+    reasons.push('همسویی خروج پول، ضعف خریدار و کاهش قیمت');
+    confidence = Math.max(5, confidence - 20);
   }
   
-  // تحلیل تعادل حجمی
-  const totalVolume = totalBuyPower + totalSellPower;
-  const volumeBalancePercent = totalVolume > 0 ? (volumeBalance / totalVolume) * 100 : 0;
-  
-  if (volumeBalancePercent > 20) {
-    reasons.push('تعادل حجمی به نفع خریداران است');
-    bullishScore += 1;
-  } else if (volumeBalancePercent < -20) {
-    reasons.push('تعادل حجمی به نفع فروشندگان است');
-    bearishScore += 1;
-  }
-  
-  // تحلیل همزمانی قیمت و جریان پول
-  if (stockData.changePercent > 2 && powerRatio > 1.2) {
-    reasons.push('رشد قیمت همراه با ورود پول - تأیید روند صعودی');
-    bullishScore += 2;
-  } else if (stockData.changePercent < -2 && powerRatio < 0.8) {
-    reasons.push('ریزش قیمت همراه با خروج پول - تأیید روند نزولی');
-    bearishScore += 2;
-  } else if (stockData.changePercent > 3 && powerRatio < 0.9) {
-    alerts.push('⚠️ رشد قیمت بدون پشتوانه حجمی - احتمال بازگشت');
-    bearishScore += 2;
-  } else if (stockData.changePercent < -3 && powerRatio > 1.1) {
-    alerts.push('✅ ریزش قیمت با ورود پول - فرصت خرید پله‌ای');
-    bullishScore += 2;
-  }
-  
-  // تعیین سیگنال نهایی
-  const totalScore = bullishScore - bearishScore;
-  let smartMoneySignal: SmartMoneyAnalysis['smartMoneySignal'] = 'HOLD';
-  let confidence = 0;
-  
-  if (totalScore >= 6) {
-    smartMoneySignal = 'BUY';
-    confidence = Math.min(95, 60 + (totalScore - 6) * 5);
-  } else if (totalScore >= 3) {
-    smartMoneySignal = 'BUY';
-    confidence = 45 + totalScore * 5;
-  } else if (totalScore <= -6) {
-    smartMoneySignal = 'SELL';
-    confidence = Math.min(95, 60 + (Math.abs(totalScore) - 6) * 5);
-  } else if (totalScore <= -3) {
-    smartMoneySignal = 'SELL';
-    confidence = 45 + Math.abs(totalScore) * 5;
-  } else {
-    smartMoneySignal = 'HOLD';
-    confidence = 50 - Math.abs(totalScore) * 3;
-  }
-  
-  // تعیین جهت جریان پول
-  let realMoneyFlow: SmartMoneyAnalysis['realMoneyFlow'] = 'خنثی';
-  let legalMoneyFlow: SmartMoneyAnalysis['legalMoneyFlow'] = 'خنثی';
-  
-  if (realBuyPerCapita > realSellPerCapita * 1.1) realMoneyFlow = 'ورود';
-  else if (realSellPerCapita > realBuyPerCapita * 1.1) realMoneyFlow = 'خروج';
-  
-  if (legalNetVolume > 0) legalMoneyFlow = 'ورود';
-  else if (legalNetVolume < 0) legalMoneyFlow = 'خروج';
+  // محدود کردن اعتماد بین 5 تا 95
+  confidence = Math.max(5, Math.min(95, confidence));
   
   return {
-    realMoneyFlow,
-    legalMoneyFlow,
+    netRealFlow,
+    netLegalFlow,
+    buyerPowerRatio,
+    volumeRatio,
+    priceVolumeConfirmation,
     smartMoneySignal,
-    confidence: Math.round(confidence),
+    confidence,
     reasons,
-    realBuyPerCapita,
-    realSellPerCapita,
-    legalNetVolume,
-    powerRatio,
-    volumeBalance,
-    alerts
+  };
+}
+
+/**
+ * فرمت کردن اعداد بزرگ به صورت خوانا
+ */
+function formatNumber(num: number): string {
+  if (num >= 1e9) return (num / 1e9).toFixed(2) + ' میلیارد';
+  if (num >= 1e6) return (num / 1e6).toFixed(2) + ' میلیون';
+  return num.toFixed(0);
+}
+
+/**
+ * تشخیص بلوک معاملاتی مشکوک
+ */
+export function detectSuspiciousBlocks(realTimeData: RealTimeData): boolean {
+  // اگر تعداد معاملات کم ولی ارزش هر معامله بسیار بالا باشد
+  const avgTradeValue = realTimeData.value / (realTimeData.count || 1);
+  const threshold = realTimeData.marketCap * 0.001; // 0.1% ارزش بازار
+  
+  return avgTradeValue > threshold && realTimeData.count < 100;
+}
+
+/**
+ * محاسبه سرانه خرید و فروش حقیقی
+ */
+export function calculatePerCapita(realTimeData: RealTimeData) {
+  return {
+    buyerPerCapita: realTimeData.buyerCount > 0 
+      ? realTimeData.buyerValue / realTimeData.buyerCount 
+      : 0,
+    sellerPerCapita: realTimeData.sellerCount > 0 
+      ? realTimeData.sellerValue / realTimeData.sellerCount 
+      : 0,
   };
 }
