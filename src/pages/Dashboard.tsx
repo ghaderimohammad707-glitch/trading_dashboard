@@ -24,7 +24,7 @@ import {
   type Instrument as ClientInstrument, type CodalReport,
 } from "@/lib/clientFetch";
 import { realTimeService } from "@/lib/realtimeDataService";
-import { generateAllSignalsAsync, type CompositeSignal } from "@/lib/analysisEngines";
+import { generateAllSignalsAsync } from "@/lib/analysisEngines";
 import type { CompleteSignal } from "@/lib/analysis";
 import { prefetchHistoricalData } from "@/lib/historicalData";
 import { saveSignalToResults } from "@/components/market/SignalResultsTab";
@@ -336,12 +336,32 @@ export default function Dashboard() {
         void prefetchHistoricalData(topInstruments, 10, 1);
 
         const allSignals = await generateAllSignalsAsync(getCachedInstruments(), getCachedCodal(), 50);
-        setLocalSignals(allSignals);
-        console.log(`[Dashboard] Generated ${allSignals.length} signals`);
+        // تبدیل CompositeSignal به CompleteSignal
+        const completeSignals: CompleteSignal[] = allSignals.map(s => ({
+          id: `sig_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          symbol: s.symbol,
+          timestamp: Date.now(),
+          type: s.action === 'buy' ? 'BUY' : s.action === 'sell' ? 'SELL' : 'HOLD',
+          confidence: s.confidence || s.compositeScore || 50,
+          entryPrice: s.entryPrice || s.currentPrice || 0,
+          stopLoss: s.stopLoss || ((s.entryPrice || s.currentPrice || 1) * 0.9),
+          takeProfit1: s.targetPrice || ((s.entryPrice || s.currentPrice || 1) * 1.05),
+          takeProfit2: s.targetPrice ? s.targetPrice * 1.05 : ((s.entryPrice || s.currentPrice || 1) * 1.08),
+          takeProfit3: s.targetPrice ? s.targetPrice * 1.1 : ((s.entryPrice || s.currentPrice || 1) * 1.12),
+          positionSize: 10,
+          riskRewardRatio: s.riskRewardRatio || 2,
+          technicalReasons: s.reasons?.slice(0, 3) || [],
+          smartMoneyReasons: s.tablouKhani?.signal === 'buy' ? ['جریان پول هوشمند مثبت'] : [],
+          fundamentalReasons: s.fundamental?.signal === 'buy' ? ['وضعیت بنیادی خوب'] : [],
+          allReasons: s.reasons || [],
+          status: 'active',
+        }));
+        setLocalSignals(completeSignals);
+        console.log(`[Dashboard] Generated ${completeSignals.length} signals`);
 
-        const actionableSignals = allSignals.filter(s => s.signal !== "hold");
+        const actionableSignals = completeSignals.filter(s => s.type !== "HOLD");
         for (const sig of actionableSignals.slice(0, 20)) {
-          void saveSignalToResults(sig);
+          void saveSignalToResults(sig as any);
         }
       }
     } catch (e) {
@@ -361,6 +381,26 @@ export default function Dashboard() {
       setModalsOpen(prev => ({ ...prev, portfolio: false }));
     } catch (e) {
       console.error("Failed to add portfolio item:", e);
+    }
+  };
+  
+  const handleAddToPortfolio = async (signal: any) => {
+    try {
+      const newItem = {
+        symbol: signal.symbol,
+        quantity: 0,
+        avgBuyPrice: signal.entryPrice,
+        segment: "stock",
+        notes: `سیگنال ${signal.type === 'BUY' ? 'خرید' : 'فروش'} - اعتماد ${signal.confidence}%`,
+        _id: generateSecureId(),
+        addedAt: Date.now(),
+      };
+      await put(STORES.PORTFOLIO, newItem);
+      setPortfolio(prev => [...prev, newItem]);
+      toast.success(`${signal.symbol} به پرتفوی اضافه شد`);
+    } catch (e) {
+      console.error("Failed to add signal to portfolio:", e);
+      toast.error("خطا در افزودن به پرتفوی");
     }
   };
 

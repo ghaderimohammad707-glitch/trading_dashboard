@@ -2,19 +2,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { faNumber } from "@/lib/format";
-import { TrendingUp, TrendingDown, Minus, Search, Filter, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Search, Filter, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  ResponsiveContainer,
-} from "recharts";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { CompleteSignal } from "@/lib/analysis";
 import { toast } from "sonner";
+import { 
+  fetchRealTimeData, 
+  fetchHistoricalData, 
+  analyzeTechnical, 
+  analyzeSmartMoney, 
+  analyzeFundamental, 
+  generateCompleteSignal,
+  fetchActiveSymbols 
+} from "@/lib/analysis";
 
 interface SignalsTabProps {
   signals: CompleteSignal[];
@@ -212,17 +213,76 @@ function SignalCard({ sig, onAddToPortfolio }: { sig: CompleteSignal; onAddToPor
 export function SignalsTab({ signals, onAddToPortfolio }: SignalsTabProps) {
   const [filter, setFilter] = useState<'all' | 'buy' | 'sell'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [generatedSignals, setGeneratedSignals] = useState<CompleteSignal[]>([]);
+
+  // تولید خودکار سیگنال‌ها هنگام بارگذاری کامپوننت
+  useEffect(() => {
+    async function loadSignals() {
+      setLoading(true);
+      try {
+        // دریافت نمادهای فعال
+        const symbols = await fetchActiveSymbols();
+        const topSymbols = symbols.slice(0, 10); // ۱۰ نماد اول
+        
+        const newSignals: CompleteSignal[] = [];
+        
+        for (const symbol of topSymbols) {
+          try {
+            // دریافت داده‌های واقعی
+            const realTimeData = await fetchRealTimeData(symbol);
+            if (!realTimeData) continue;
+            
+            const historicalData = await fetchHistoricalData(symbol, 60);
+            if (historicalData.length < 20) continue;
+            
+            // تحلیل‌ها
+            const technical = analyzeTechnical(historicalData);
+            const smartMoney = analyzeSmartMoney(realTimeData);
+            const fundamental = analyzeFundamental(realTimeData);
+            
+            // تولید سیگنال
+            const signal = generateCompleteSignal(
+              symbol,
+              realTimeData.lastPrice,
+              technical,
+              smartMoney,
+              fundamental
+            );
+            
+            if (signal.type !== 'HOLD') {
+              newSignals.push(signal);
+            }
+          } catch (err) {
+            console.error(`Error analyzing ${symbol}:`, err);
+          }
+        }
+        
+        setGeneratedSignals(newSignals);
+      } catch (error) {
+        console.error('Error loading signals:', error);
+        toast.error('خطا در دریافت سیگنال‌ها');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadSignals();
+  }, []);
+
+  // استفاده از سیگنال‌های تولید شده یا سیگنال‌های ورودی
+  const allSignals = generatedSignals.length > 0 ? generatedSignals : signals;
 
   const filteredSignals = useMemo(() => {
-    return signals.filter(sig => {
+    return allSignals.filter(sig => {
       const matchesFilter = filter === 'all' || sig.type.toLowerCase() === filter;
       const matchesSearch = sig.symbol.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesFilter && matchesSearch;
     });
-  }, [signals, filter, searchTerm]);
+  }, [allSignals, filter, searchTerm]);
 
-  const buySignals = signals.filter(s => s.type === 'BUY').length;
-  const sellSignals = signals.filter(s => s.type === 'SELL').length;
+  const buySignals = allSignals.filter(s => s.type === 'BUY').length;
+  const sellSignals = allSignals.filter(s => s.type === 'SELL').length;
 
   return (
     <div className="space-y-4 p-4">
@@ -237,49 +297,30 @@ export function SignalsTab({ signals, onAddToPortfolio }: SignalsTabProps) {
             <TrendingDown className="w-3 h-3 ml-1" />
             فروش: {faNumber(sellSignals)}
           </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+            disabled={loading}
+          >
+            <RefreshCw className={cn("w-4 h-4 ml-1", loading && "animate-spin")} />
+            بروزرسانی
+          </Button>
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="جستجوی نماد..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-3 pr-8 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <span className="mr-2 text-muted-foreground">در حال تحلیل بازار...</span>
         </div>
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('all')}
-        >
-          همه
-        </Button>
-        <Button
-          variant={filter === 'buy' ? 'default' : 'outline'}
-          size="sm"
-          className="bg-emerald-600 hover:bg-emerald-700"
-          onClick={() => setFilter('buy')}
-        >
-          خرید
-        </Button>
-        <Button
-          variant={filter === 'sell' ? 'default' : 'outline'}
-          size="sm"
-          className="bg-rose-600 hover:bg-rose-700"
-          onClick={() => setFilter('sell')}
-        >
-          فروش
-        </Button>
-      </div>
+      )}
 
-      {filteredSignals.length === 0 ? (
+      {!loading && filteredSignals.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <AlertTriangle className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>هیچ سیگنالی یافت نشد</p>
+          <p className="text-xs mt-2">سیستم در حال بررسی بازار است</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
