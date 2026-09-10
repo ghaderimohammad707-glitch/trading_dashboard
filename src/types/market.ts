@@ -188,3 +188,81 @@ export interface SymbolData {
   realInvestor: InvestorTypeData | null;
   legalInvestor: InvestorTypeData | null;
 }
+
+/**
+ * داده‌های صندوق سرمایه‌گذاری
+ */
+export interface FundData {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  nav: number; // ارزش خالص دارایی
+  pmPrice: number; // قیمت ابطال
+  sector: string;
+}
+
+/**
+ * داده‌های کالا و فلزات
+ */
+export interface CommodityData {
+  name: string;
+  price: number;
+  change: number;
+  unit: string;
+  currency?: string;
+}
+
+/**
+ * داده‌های ارز
+ */
+export interface CurrencyData {
+  name: string;
+  price: number;
+  change: number;
+  unit: string;
+}
+
+/**
+ * داده‌های قرارداد آتی
+ */
+export interface FuturesData {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  expiry: string;
+}
+
+/**
+ * داده‌های اختیار معامله
+ */
+export interface OptionData {
+  symbol: string;
+  name: string;
+  strike: number;
+  expiry: string;
+  type: 'call' | 'put';
+  underlying: string;
+}
+
+/**
+ * داده‌های شاخص‌های بازار
+ */
+export interface MarketIndexData {
+  name: string;
+  value: number;
+  change: number;
+  changePercent: number;
+}
+
+/**
+ * داده‌های کارت‌های صفحه اصلی
+ */
+export interface DashboardCardData {
+  title: string;
+  value: string | number;
+  change?: number;
+  changePercent?: number;
+  icon?: string;
+}
