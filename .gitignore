@@ -1,10 +1,11 @@
 ```
 # Build artifacts
 dist/
-tsconfig.tsbuildinfo
+*.js
+*.css
 
-# Dependencies
-node_modules/
+# TypeScript build info
+tsconfig.tsbuildinfo
 
 # Logs and temp files
 *.log
@@ -13,13 +14,12 @@ node_modules/
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
 .idea/
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# Dependencies
+node_modules/
 ```
