@@ -30,89 +30,75 @@ describe('فاز ۲: سرویس‌های اتصال به API بازار', () => 
   });
 
   describe('TSETMC Service', () => {
-    it('باید داده‌های Market Watch را دریافت کند (با fallback به mock)', async () => {
+    it('باید داده‌های Market Watch را دریافت کند (با fallback به null در صورت عدم دسترسی)', async () => {
       const result = await tsetmcService.getMarketWatch('خودرو');
       
-      expect(result).toBeDefined();
-      expect(result?.symbol).toBe('خودرو');
-      expect(typeof result?.lastPrice).toBe('number');
-      expect(typeof result?.changePercent).toBe('number');
+      // در محیط تست که API در دسترس نیست، باید null برگرداند (بدون داده جعلی)
+      expect(result).toBeNull();
     });
 
-    it('باید داده‌های تاریخی (کندل) دریافت کند (با fallback به mock)', async () => {
+    it('باید داده‌های تاریخی (کندل) دریافت کند (با fallback به آرایه خالی)', async () => {
       const candles = await tsetmcService.getHistoricalData('فولاد', 30);
       
+      // در محیط تست که API در دسترس نیست، باید آرایه خالی برگرداند (بدون داده جعلی)
       expect(candles).toBeDefined();
       expect(Array.isArray(candles)).toBe(true);
-      expect(candles.length).toBeGreaterThan(0);
-      expect(candles[0]).toHaveProperty('time');
-      expect(candles[0]).toHaveProperty('open');
-      expect(candles[0]).toHaveProperty('high');
-      expect(candles[0]).toHaveProperty('low');
-      expect(candles[0]).toHaveProperty('close');
-      expect(candles[0]).toHaveProperty('volume');
+      expect(candles.length).toBe(0);
     });
 
     it('باید کش را مدیریت کند', async () => {
-      // First call
+      // First call - returns null in test mode
       const result1 = await tsetmcService.getMarketWatch('شستا');
+      expect(result1).toBeNull();
       
       // Second call (should use cache - same reference)
       const result2 = await tsetmcService.getMarketWatch('شستا');
-      
-      expect(result1?.symbol).toBe(result2?.symbol); // Same object reference from cache
+      expect(result2).toBeNull();
       
       // Clear cache
       tsetmcService.clearCache();
       
-      // Third call (should generate new data)
+      // Third call - still null in test mode
       const result3 = await tsetmcService.getMarketWatch('شستا');
-      
-      expect(result3).toBeDefined();
-      expect(result3?.symbol).toBe('شستا');
+      expect(result3).toBeNull();
     });
 
     it('باید Order Book را دریافت کند', async () => {
       const orderBook = await tsetmcService.getOrderBook('ذوب');
       
+      // در محیط تست که API در دسترس نیست، باید آبجکت با آرایه‌های خالی برگرداند
       expect(orderBook).toBeDefined();
       expect(orderBook).toHaveProperty('bids');
       expect(orderBook).toHaveProperty('asks');
       expect(Array.isArray(orderBook?.bids)).toBe(true);
       expect(Array.isArray(orderBook?.asks)).toBe(true);
+      expect(orderBook?.bids.length).toBe(0);
+      expect(orderBook?.asks.length).toBe(0);
     });
   });
 
   describe('Codal Service', () => {
-    it('باید صورت‌های مالی را دریافت کند (با fallback به mock)', async () => {
+    it('باید صورت‌های مالی را دریافت کند (با fallback به null در صورت عدم دسترسی)', async () => {
       const financials = await codalService.getFinancialStatements('خودرو');
       
-      expect(financials).toBeDefined();
-      expect(financials?.symbol).toBe('خودرو');
-      expect(typeof financials?.revenue).toBe('number');
-      expect(typeof financials?.netProfit).toBe('number');
-      expect(financials?.eps).toBeDefined();
-      expect(financials?.pe).toBeDefined();
+      // در محیط تست که API در دسترس نیست، باید null برگرداند (بدون داده جعلی)
+      expect(financials).toBeNull();
     });
 
-    it('باید گزارش‌های ماهانه را دریافت کند (با fallback به mock)', async () => {
+    it('باید گزارش‌های ماهانه را دریافت کند (با fallback به آرایه خالی)', async () => {
       const reports = await codalService.getMonthlyReports('فولاد', 6);
       
+      // در محیط تست که API در دسترس نیست، باید آرایه خالی برگرداند (بدون داده جعلی)
       expect(reports).toBeDefined();
       expect(Array.isArray(reports)).toBe(true);
-      expect(reports.length).toBeGreaterThan(0);
-      expect(reports[0]).toHaveProperty('symbol');
-      expect(reports[0]).toHaveProperty('month');
-      expect(reports[0]).toHaveProperty('revenue');
+      expect(reports.length).toBe(0);
     });
 
-    it('باید اطلاعات سود تقسیمی را دریافت کند (با fallback به mock)', async () => {
+    it('باید اطلاعات سود تقسیمی را دریافت کند (با fallback به null)', async () => {
       const dividendInfo = await codalService.getDividendInfo('شستا');
       
-      expect(dividendInfo).toBeDefined();
-      expect(dividendInfo?.symbol).toBe('شستا');
-      expect(typeof dividendInfo?.dpsProposed).toBe('number');
-      expect(typeof dividendInfo?.dividendYield).toBe('number');
+      // در محیط تست که API در دسترس نیست، باید null برگرداند (بدون داده جعلی)
+      expect(dividendInfo).toBeNull();
     });
   });
 
@@ -140,12 +126,11 @@ describe('فاز ۲: سرویس‌های اتصال به API بازار', () => 
       }
     });
 
-    it('باید قیمت لحظه‌ای را دریافت کند', async () => {
+    it('باید قیمت لحظه‌ای را دریافت کند (با fallback به null)', async () => {
       const price = await marketDataService.getLivePrice('ذوب');
       
-      expect(price).toBeDefined();
-      expect(typeof price?.lastPrice).toBe('number');
-      expect(typeof price?.changePercent).toBe('number');
+      // در محیط تست که API در دسترس نیست، باید null برگرداند (بدون داده جعلی)
+      expect(price).toBeNull();
     });
   });
 

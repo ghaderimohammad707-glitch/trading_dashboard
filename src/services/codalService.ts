@@ -112,8 +112,8 @@ class CodalService {
     } catch (error: any) {
       console.error(`Failed to fetch financial statements for ${symbol}:`, error.message);
       
-      // Return mock data for development
-      return this.createMockFinancialStatement(symbol);
+      // Return null instead of mock data - no fake data allowed
+      return null;
     }
   }
 
@@ -158,8 +158,8 @@ class CodalService {
     } catch (error: any) {
       console.error(`Failed to fetch monthly reports for ${symbol}:`, error.message);
       
-      // Generate mock data
-      return this.generateMockMonthlyReports(symbol, limit);
+      // Return empty array instead of mock data - no fake data allowed
+      return [];
     }
   }
 
@@ -197,8 +197,8 @@ class CodalService {
     } catch (error: any) {
       console.error(`Failed to fetch dividend info for ${symbol}:`, error.message);
       
-      // Return mock data
-      return this.createMockDividendInfo(symbol);
+      // Return null instead of mock data - no fake data allowed
+      return null;
     }
   }
 

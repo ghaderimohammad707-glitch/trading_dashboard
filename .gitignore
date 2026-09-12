@@ -1,1 +1,40 @@
-Nothing should be ignored in this case, as only a TypeScript source file was added without any build artifacts, dependencies, or temporary files.
+```
+# Build artifacts
+dist/
+build/
+*.js
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Cache directories
+.cache/
+.node_modules/
+.npm/
+.yarn/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+```

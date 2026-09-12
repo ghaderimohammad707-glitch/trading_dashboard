@@ -236,76 +236,22 @@ class TSETMCService {
   }
 
   /**
-   * ایجاد داده Mock برای توسعه
+   * ایجاد داده Mock برای توسعه - فقط در صورتی که API در دسترس نباشد
+   * توجه: این متدها فقط برای fallback استفاده می‌شوند و باید حذف شوند
    */
-  private createMockMarketWatch(symbol: string): MarketWatchData {
-    const basePrice = Math.random() * 5000 + 500;
-    const change = (Math.random() - 0.45) * 100;
-    
-    return {
-      symbol,
-      lastPrice: parseFloat((basePrice + change).toFixed(2)),
-      changePercent: parseFloat(((change / basePrice) * 100).toFixed(2)),
-      volume: Math.floor(Math.random() * 10000000) + 100000,
-      value: Math.floor(Math.random() * 100000000000),
-      bestBid: parseFloat(basePrice.toFixed(2)),
-      bestAsk: parseFloat((basePrice * 1.002).toFixed(2)),
-      bidVolume: Math.floor(Math.random() * 100000),
-      askVolume: Math.floor(Math.random() * 100000),
-      totalShares: Math.floor(Math.random() * 1000000000),
-      minRange: parseFloat((basePrice * 0.98).toFixed(2)),
-      maxRange: parseFloat((basePrice * 1.02).toFixed(2)),
-      yesterdayPrice: parseFloat(basePrice.toFixed(2)),
-      state: 'Open',
-      timestamp: Date.now(),
-      openPrice: parseFloat(basePrice.toFixed(2)),
-      highPrice: parseFloat((basePrice * 1.015).toFixed(2)),
-      lowPrice: parseFloat((basePrice * 0.985).toFixed(2)),
-      buyerCount: Math.floor(Math.random() * 3000),
-      sellerCount: Math.floor(Math.random() * 3000),
-      investorTypeBuy: { 
-        individual: Math.random() * 80 + 10, 
-        institutional: Math.random() * 20 
-      },
-      investorTypeSell: { 
-        individual: Math.random() * 70 + 10, 
-        institutional: Math.random() * 30 
-      }
-    };
+  private createMockMarketWatch(symbol: string): MarketWatchData | null {
+    // بازگشت null به جای داده جعلی - طبق سیاست عدم استفاده از داده غیر واقعی
+    console.warn(`[TSETMC Warning]: Returning null for ${symbol} - API not available. No mock data generated.`);
+    return null;
   }
 
   /**
-   * تولید کندل‌های Mock
+   * تولید کندل‌های Mock - حذف شده طبق سیاست عدم استفاده از داده غیر واقعی
    */
   private generateMockCandles(days: number): CandleData[] {
-    const candles: CandleData[] = [];
-    const now = Date.now();
-    let basePrice = Math.random() * 5000 + 1000;
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date(now - i * 24 * 60 * 60 * 1000);
-      const volatility = 0.03 + Math.random() * 0.02;
-      const trend = Math.random() > 0.48 ? 1 : -1;
-      
-      const open = basePrice;
-      const close = open * (1 + trend * volatility * Math.random());
-      const high = Math.max(open, close) * (1 + Math.random() * volatility * 0.5);
-      const low = Math.min(open, close) * (1 - Math.random() * volatility * 0.5);
-      const volume = Math.floor(Math.random() * 5000000) + 100000;
-
-      candles.push({
-        time: Math.floor(date.getTime() / 1000),
-        open: parseFloat(open.toFixed(2)),
-        high: parseFloat(high.toFixed(2)),
-        low: parseFloat(low.toFixed(2)),
-        close: parseFloat(close.toFixed(2)),
-        volume
-      });
-
-      basePrice = close;
-    }
-
-    return candles;
+    // بازگشت آرایه خالی به جای داده جعلی - طبق سیاست عدم استفاده از داده غیر واقعی
+    console.warn(`[TSETMC Warning]: Returning empty candles - API not available. No mock data generated.`);
+    return [];
   }
 
   clearCache() {
