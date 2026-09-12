@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Sparkline, sparklineValues } from "@/components/market/Sparkline";
 import { AnimatedCard } from "@/components/market/AnimatedCard";
 import { lazy, Suspense, useEffect, useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { registerShortcuts } from "@/lib/keyboardShortcuts";
 import { InstrumentDetail } from "@/components/market/InstrumentDetail";
 import { InstrumentTable } from "@/components/market/InstrumentTable";
@@ -189,6 +190,37 @@ function MarketStatusBar() {
 export default function Dashboard() {
   const now = useClock();
   const fontSize = useFontSize();
+  const queryClient = useQueryClient();
+  
+  // Use React Query for market data with caching and background refetching
+  const { 
+    data: instrumentsData = [], 
+    isLoading: isInstrumentsLoading, 
+    isRefetching: isInstrumentsRefetching,
+    error: instrumentsError 
+  } = useQuery({
+    queryKey: ['market-instruments'],
+    queryFn: async () => {
+      const result = await fetchAllMarketDataClient();
+      return getCachedInstruments();
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+  
+  const { 
+    data: codalData = [], 
+    isLoading: isCodalLoading 
+  } = useQuery({
+    queryKey: ['codal-reports'],
+    queryFn: async () => {
+      await fetchCodalClient(getCachedInstruments());
+      return getCachedCodal();
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+  
   const [instruments, setInstruments] = useState<ClientInstrument[]>([]);
   const [localCodal, setLocalCodal] = useState<CodalReport[]>([]);
   const [localSignals, setLocalSignals] = useState<CompleteSignal[]>([]);

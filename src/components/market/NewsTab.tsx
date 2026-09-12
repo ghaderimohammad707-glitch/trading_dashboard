@@ -123,7 +123,8 @@ async function fetchNewsClient(): Promise<NewsItem[]> {
   unique.sort((a, b) => b.publishedAt - a.publishedAt);
   
   if (unique.length > 0) return unique;
-  return generateFallbackNews();
+  // Return empty array instead of fake news
+  return [];
 }
 
 async function fetchRSS(proxyPath: string, sourceName: string): Promise<NewsItem[]> {
@@ -311,17 +312,7 @@ function analyzeSentiment(text: string): number {
   return Math.max(-1, Math.min(1, score));
 }
 
-function generateFallbackNews(): NewsItem[] {
-  const now = Date.now();
-  return [
-    { _id: "fallback-1", title: "بازار سهام ایران منتظر تصمیمات جدید سیاستگذار", summary: "شاخص کل بورس در معاملات امروز با نوسانات اندکی همراه بود.", source: "نبض بازار", url: "#", publishedAt: now - 3600000 },
-    { _id: "fallback-2", title: "افزایش نرخ ارز در بازار آزاد", summary: "دلار آمریکا در معاملات امروز با افزایش قیمت همراه بود.", source: "نبض بازار", url: "#", publishedAt: now - 7200000 },
-    { _id: "fallback-3", title: "قیمت طلا و سکه در بازار امروز", summary: "طلا و سکه با نوسان قیمتی در بازار معامله شدند.", source: "نبض بازار", url: "#", publishedAt: now - 10800000 },
-    { _id: "fallback-4", title: "گزارش عملکرد شرکت‌های بورسی در فصل پاییز", summary: "شرکت‌های بزرگ عملکرد متفاوتی را در فصل پاییز ثبت کردند.", source: "نبض بازار", url: "#", publishedAt: now - 14400000 },
-    { _id: "fallback-5", title: "سیاست‌های پولی بانک مرکزی و تأثیر بر بازار سرمایه", summary: "تصمیمات بانک مرکزی تأثیر مستقیمی بر بازار سرمایه داشته است.", source: "نبض بازار", url: "#", publishedAt: now - 18000000 },
-    { _id: "fallback-6", title: "_ppdex: نوسانات بازار ارز و تأثیر آن بر صنایع صادراتی", summary: "تغییرات نرخ ارز تأثیر قابل توجهی بر صنایع صادراتی داشته است.", source: "نبض بازار", url: "#", publishedAt: now - 21600000 },
-  ];
-}
+// Removed: generateFallbackNews function - no fake data allowed
 
 /* ═══════════════════════════════════════════════════════
    Component
