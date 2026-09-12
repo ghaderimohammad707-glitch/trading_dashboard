@@ -76,10 +76,11 @@ async function fetchCryptoPrices(): Promise<Record<string, { price: number; chan
     };
   } catch (e) {
     console.warn("[MarketCards] Crypto fetch failed:", e);
+    // Return zeros instead of fake data
     return {
-      btc: { price: 95000, change24h: 0 },
-      eth: { price: 3400, change24h: 0 },
-      usdt: { price: 1, change24h: 0 },
+      btc: { price: 0, change24h: 0 },
+      eth: { price: 0, change24h: 0 },
+      usdt: { price: 0, change24h: 0 },
     };
   }
 }

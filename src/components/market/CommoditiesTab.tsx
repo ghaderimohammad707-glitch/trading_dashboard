@@ -76,7 +76,8 @@ const COLOR_MAP: Record<string, string> = {
 
 /**
  * Reference data — used only as initial display before real data loads.
- * These are approximate values from late 2024 / early 2025.
+ * All prices are set to 0 (empty) - no fake/reference values allowed.
+ * Real data must be fetched from TSETMC/TGJU APIs.
  */
 function getReferenceData(): CommodityItem[] {
   return [
