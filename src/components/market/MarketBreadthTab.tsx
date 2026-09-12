@@ -3,11 +3,25 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, TrendingDown, Minus, Layers } from "lucide-react";
 import { calculateMarketBreadth, analyzeSectorRotation } from "@/lib/marketBreadth";
 import { getCachedInstruments } from "@/lib/clientFetch";
+import { IndustryDistribution, SectorPerformance, PriceDistribution, Heatmap } from "./AdvancedCharts";
 
 export function MarketBreadthTab() {
   const instruments = useMemo(() => getCachedInstruments(), []);
   const breadth = useMemo(() => calculateMarketBreadth(instruments), [instruments]);
   const sectors = useMemo(() => analyzeSectorRotation(instruments), [instruments]);
+  
+  // Prepare heatmap data
+  const heatmapData = useMemo(() => 
+    instruments
+      .filter(i => i.last > 0)
+      .slice(0, 25) // Top 25 by volume or random sample
+      .map(i => ({
+        symbol: i.symbol,
+        changePercent: i.changePercent,
+        value: i.volume,
+      })),
+    [instruments]
+  );
 
   const momentumIcon = (m: string) => {
     if (m === "strong_up") return <TrendingUp className="size-4 text-emerald-500" />;
@@ -138,6 +152,33 @@ export function MarketBreadthTab() {
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* بصری‌سازی پیشرفته داده‌ها */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* توزیع صنایع */}
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <h3 className="text-sm font-semibold mb-4">توزیع صنایع</h3>
+          <IndustryDistribution instruments={instruments} />
+        </div>
+
+        {/* عملکرد صنایع */}
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <h3 className="text-sm font-semibold mb-4">عملکرد صنایع</h3>
+          <SectorPerformance instruments={instruments} />
+        </div>
+
+        {/* توزیع قیمت */}
+        <div className="rounded-xl border bg-card p-4 shadow-sm md:col-span-2">
+          <h3 className="text-sm font-semibold mb-4">توزیع قیمت نمادها</h3>
+          <PriceDistribution instruments={instruments} />
+        </div>
+
+        {/* هیتمپ بازار */}
+        <div className="rounded-xl border bg-card p-4 shadow-sm md:col-span-2">
+          <h3 className="text-sm font-semibold mb-4">هیتمپ بازار (۲۵ نماد برتر)</h3>
+          <Heatmap data={heatmapData} columns={5} />
         </div>
       </div>
     </div>
