@@ -42,6 +42,8 @@ import { OptionsTab } from "@/components/market/OptionsTab";
 import { FuturesTab } from "@/components/market/FuturesTab";
 import { FundsTab } from "@/components/market/FundsTab";
 import { CommoditiesTab } from "@/components/market/CommoditiesTab";
+import { AlertPanel, AlertToaster } from "@/components/market/AlertPanel";
+import { CreateAlertModal } from "@/components/market/CreateAlertModal";
 import {
   Activity, Bell, Briefcase, ChevronDown, Clock, FileText, Loader2, Users,
   LogOut, Radio, RefreshCw, Search, Settings, Shield, TrendingUp,
@@ -239,6 +241,8 @@ export default function Dashboard() {
   const [portfolio, setPortfolio] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [modalsOpen, setModalsOpen] = useState({ portfolio: false, alerts: false });
+  const [createAlertOpen, setCreateAlertOpen] = useState(false);
+  const [selectedSymbolForAlert, setSelectedSymbolForAlert] = useState<string | undefined>();
 
   // Load portfolio and alerts from IndexedDB on mount
   useEffect(() => {
@@ -473,6 +477,11 @@ export default function Dashboard() {
     }
   };
 
+  const handleOpenCreateAlert = (symbol?: string) => {
+    setSelectedSymbolForAlert(symbol);
+    setCreateAlertOpen(true);
+  };
+
   const handleRemoveAlert = async (id: string) => {
     try {
       await idbRemove(STORES.ALERTS, id);
@@ -537,7 +546,7 @@ export default function Dashboard() {
     { id: "news", label: "اخبار", icon: BookOpen },
     { id: "codal", label: "کدال", icon: FileText },
     { id: "portfolio", label: "پرتفوی", icon: Briefcase },
-    { id: "alerts", label: "هشدارها", icon: Shield },
+    { id: "alerts-panel", label: "هشدارها (جدید)", icon: Shield, action: () => handleOpenCreateAlert() },
     { id: "reports", label: "گزارش‌ها", icon: BarChart3 },
     { id: "backtest", label: "بک‌تست", icon: BarChart3 },
     { id: "risk", label: "مدیریت ریسک", icon: TrendingDown },
@@ -702,8 +711,15 @@ export default function Dashboard() {
             {secondaryTabs.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const handleClick = () => {
+                if (tab.action) {
+                  tab.action();
+                } else {
+                  setActiveTab(tab.id);
+                }
+              };
               return (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                <button key={tab.id} onClick={handleClick}
                   className={cn(
                     "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-all",
                     isActive ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted/50",
@@ -889,6 +905,13 @@ export default function Dashboard() {
             />
           </motion.div>
         )}
+        
+        {/* Create Alert Modal - New System */}
+        <CreateAlertModal
+          open={createAlertOpen}
+          onOpenChange={setCreateAlertOpen}
+          defaultSymbol={selectedSymbolForAlert}
+        />
       </AnimatePresence>
 
       {/* ─── Footer Disclaimer با طراحی مدرن ─── */}
