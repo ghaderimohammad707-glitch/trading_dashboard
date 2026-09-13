@@ -42,7 +42,7 @@ describe('economicCalendar', () => {
       description: 'انتشار گزارش عملکرد فصلی',
       importance: 'medium',
       symbols: ['فملی'],
-      source: 'generated',
+      source: 'codal',
     },
     {
       id: '4',
@@ -51,7 +51,7 @@ describe('economicCalendar', () => {
       category: 'holiday',
       description: 'بازار تعطیل است',
       importance: 'low',
-      source: 'generated',
+      source: 'tsetmc',
     },
     {
       id: '5',

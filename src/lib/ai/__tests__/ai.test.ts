@@ -24,11 +24,11 @@ import {
   performMultiLayerAnalysis,
   generateAnalysisReport
 } from '../signalAggregator';
-import { Candle } from '../../types';
+import type { OHLCV } from '../../backtest/types';
 
 // داده‌های تستی
-function generateTestCandles(count: number, trend: 'UP' | 'DOWN' | 'RANGE' = 'RANGE'): Candle[] {
-  const candles: Candle[] = [];
+function generateTestCandles(count: number, trend: 'UP' | 'DOWN' | 'RANGE' = 'RANGE'): OHLCV[] {
+  const candles: OHLCV[] = [];
   let price = 10000;
   const now = Date.now();
   
@@ -46,7 +46,7 @@ function generateTestCandles(count: number, trend: 'UP' | 'DOWN' | 'RANGE' = 'RA
     const low = Math.min(open, close) - Math.random() * 100;
     
     candles.push({
-      timestamp: new Date(now - (count - i) * 86400000),
+      timestamp: now - (count - i) * 86400000,
       open: parseFloat(open.toFixed(2)),
       high: parseFloat(high.toFixed(2)),
       low: parseFloat(low.toFixed(2)),

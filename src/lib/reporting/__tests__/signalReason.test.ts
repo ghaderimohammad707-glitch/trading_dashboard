@@ -10,10 +10,19 @@ describe('فاز ۴: گزارش‌دهی - Signal Reason Interpreter', () => {
   
   const createTestSignal = (overrides: Partial<CompositeSignal> = {}): CompositeSignal => ({
     symbol: 'خودرو',
+    name: 'شرکت خودرو',
+    signal: 'buy',
     action: 'buy',
+    strength: 75,
+    technical: { score: 70, signal: 'buy' },
+    fundamental: { score: 60, signal: 'hold' },
+    volume: { score: 80, signal: 'buy' },
+    tablouKhani: { score: 75, signal: 'buy' },
+    sentiment: { score: 65, signal: 'hold' },
+    compositeScore: 72,
+    reasons: ['RSI oversold', 'MACD bullish crossover'],
     currentPrice: 15000,
     confidence: 75,
-    timestamp: new Date(),
     indicators: {
       rsi: 25, // اشباع فروش
       macd: {
