@@ -36,12 +36,22 @@ function getPersianFontPath(): string | null {
     path.join(process.cwd(), 'assets/fonts/BNazanin.ttf'),
     path.join(process.cwd(), 'src/assets/fonts/BNazanin.ttf'),
     '/usr/share/fonts/truetype/BNazanin.ttf',
-    '/usr/share/fonts/BNazanin.ttf'
+    '/usr/share/fonts/BNazanin.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
   ];
   
   for (const fontPath of possibleFonts) {
     if (fs.existsSync(fontPath)) {
-      return fontPath;
+      // Validate that it's a real font file (TTF files start with 0x00010000)
+      try {
+        const buffer = fs.readFileSync(fontPath);
+        if (buffer.length > 4 && buffer[0] === 0x00 && buffer[1] === 0x01 && buffer[2] === 0x00 && buffer[3] === 0x00) {
+          return fontPath;
+        }
+      } catch (e) {
+        // Skip invalid files
+      }
     }
   }
   
@@ -57,7 +67,7 @@ function registerPersianFont(doc: PDFKit.PDFDocument): string {
   if (persianFontPath) {
     try {
       doc.font(persianFontPath);
-      return 'persian';
+      return persianFontPath; // Return the path, not 'persian'
     } catch (error) {
       console.warn('Failed to load Persian font:', error);
     }
