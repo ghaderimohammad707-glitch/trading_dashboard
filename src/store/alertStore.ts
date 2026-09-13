@@ -18,7 +18,7 @@ export interface PriceAlert {
 
 interface AlertState {
   alerts: PriceAlert[];
-  addAlert: (alert: Omit<PriceAlert, 'id' | 'createdAt' | 'isActive'>) => string;
+  addAlert: (alertData: Omit<PriceAlert, 'id' | 'createdAt' | 'isActive'>) => string;
   removeAlert: (id: string) => void;
   updateAlert: (id: string, updates: Partial<PriceAlert>) => void;
   triggerAlert: (id: string) => void;
@@ -44,13 +44,13 @@ export const useAlertStore = create<AlertState>()(
         return id;
       },
       
-      removeAlert: (id) => {
+      removeAlert: (id: string) => {
         set((state) => ({
           alerts: state.alerts.filter((alert) => alert.id !== id),
         }));
       },
       
-      updateAlert: (id, updates) => {
+      updateAlert: (id: string, updates: Partial<PriceAlert>) => {
         set((state) => ({
           alerts: state.alerts.map((alert) =>
             alert.id === id ? { ...alert, ...updates } : alert
@@ -58,7 +58,7 @@ export const useAlertStore = create<AlertState>()(
         }));
       },
       
-      triggerAlert: (id) => {
+      triggerAlert: (id: string) => {
         set((state) => ({
           alerts: state.alerts.map((alert) =>
             alert.id === id
@@ -72,7 +72,7 @@ export const useAlertStore = create<AlertState>()(
         return get().alerts.filter((alert) => alert.isActive);
       },
       
-      getAlertsBySymbol: (symbol) => {
+      getAlertsBySymbol: (symbol: string) => {
         return get().alerts.filter((alert) => alert.symbol === symbol);
       },
       
@@ -113,7 +113,7 @@ export class AlertService {
     const { getAlertsBySymbol, triggerAlert } = useAlertStore.getState();
     const alerts = getAlertsBySymbol(symbol);
     
-    alerts.forEach((alert) => {
+    alerts.forEach((alert: PriceAlert) => {
       let shouldTrigger = false;
       
       if (alert.type === 'price_above' || alert.type === 'price_below') {

@@ -1,37 +1,27 @@
 ```
-# Dependencies
-node_modules/
-
 # Build artifacts
 dist/
 build/
+*.js
+*.css
 *.tsbuildinfo
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Logs and temp files
+*.log
+*.tmp
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Logs
-*.log
-
-# Editor/IDE
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
-
-# Python (if applicable)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
 
 # OS
 .DS_Store

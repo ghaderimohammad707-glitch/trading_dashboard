@@ -1,10 +1,10 @@
 import React from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { useAlertStore, type PriceAlert, type AlertType } from '../store/alertStore';
+import { useAlertStore, type PriceAlert, type AlertType } from '@/store/alertStore';
 import { Bell, TrendingUp, TrendingDown, Activity, AlertTriangle, X } from 'lucide-react';
-import { Button } from './ui/button';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface AlertNotificationProps {
   alert: PriceAlert;
