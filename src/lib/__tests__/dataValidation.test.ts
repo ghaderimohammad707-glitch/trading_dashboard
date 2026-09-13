@@ -3,7 +3,7 @@
  * آزمون‌های واحد برای ماژول‌های اعتبارسنجی داده و مدیریت خطای شبکه
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   validateCandle,
   detectOutliers,
@@ -19,7 +19,7 @@ import {
   ResilientRequest,
   NetworkMonitor
 } from '../networkRetry';
-import type { OHLCV } from './types';
+import type { OHLCV } from '../backtest/types';
 
 describe('Data Validation', () => {
   const validCandle: OHLCV = {

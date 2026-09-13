@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { calculateCorrelationMatrix, optimizePortfolio, suggestRebalance } from '../portfolioOptimizer';
-import { fetchHistoricalOHLC } from '../historicalData';
+import { fetchHistoricalOHLC, type OHLCBar } from '../historicalData';
 
 vi.mock('../historicalData');
 
@@ -13,13 +13,15 @@ describe('portfolioOptimizer - بهینه‌سازی پرتفوی', () => {
     { symbol: 'خودرو', segment: 'tse', volume: 600000, rawInsCode: '5' },
   ] as any[];
 
-  const mockOHLCData = Array.from({ length: 60 }, (_, i) => ({
+  const mockOHLCData: OHLCBar[] = Array.from({ length: 60 }, (_, i) => ({
     date: `2024-01-${String(i + 1).padStart(2, '0')}`,
     open: 1000 + i * 10,
     high: 1050 + i * 10,
     low: 990 + i * 10,
     close: 1020 + i * 10,
     volume: 1000000,
+    value: 1020000000 + i * 10000,
+    tradeCount: 1000 + i * 10,
   }));
 
   beforeEach(() => {

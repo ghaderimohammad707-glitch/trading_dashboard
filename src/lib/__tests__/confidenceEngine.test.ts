@@ -16,9 +16,10 @@ const createMockAnalysis = (score: number): AnalysisResult => ({
 });
 
 const createMockInstrument = (changePercent: number): Instrument => ({
-  insCode: '123456',
+  _id: '123456',
   symbol: 'TEST',
   name: 'تست',
+  segment: 'tse',
   last: 1000,
   close: 980,
   open: 990,
@@ -26,14 +27,16 @@ const createMockInstrument = (changePercent: number): Instrument => ({
   low: 970,
   change: 20,
   changePercent,
-  yesterday: 980,
   volume: 1000000,
   value: 1000000000,
-  count: 100,
-  bestDemandVol: 10000,
-  bestDemandPrice: 995,
-  bestSupplyVol: 15000,
-  bestSupplyPrice: 1005,
+  tradeCount: 100,
+  status: 'open',
+  rawInsCode: '123456',
+  yesterday: 980,
+  bestBuy1: 995,
+  bestBuyVol1: 10000,
+  bestSell1: 1005,
+  bestSellVol1: 15000,
 } as Instrument);
 
 describe('Confidence Engine', () => {
